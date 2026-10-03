@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>博客后台</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+main{max-width:1180px}
+.login{max-width:420px;margin:40px auto 0;padding:32px;display:grid;gap:16px}
+.login h1{margin:0;font-family:var(--f-hk);font-size:28px}
+.login p{margin:0;color:var(--mute);font-size:14px}
+
+.bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
+.bar h1{margin:0;font-family:var(--f-hk);font-size:30px}
+.who{font-family:var(--f-mono);font-size:12.5px;color:var(--mute);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.tabs button{background:#0a1322b3;border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:14px;color:var(--mute);cursor:pointer}
+.tabs button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+.editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:900px){.editor{grid-template-columns:1fr}}
+.ed-form{padding:24px;display:grid;gap:14px;align-content:start}
+.ed-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.ed-row{grid-template-columns:1fr}}
+#content{min-height:380px;font-family:var(--f-mono);font-size:14px}
+.ed-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;color:#c4d0de;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--neon)}
+.preview{padding:28px;min-width:0;max-height:calc(100vh - 140px);overflow:auto;position:sticky;top:90px}
+.preview .pv-label{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;color:var(--neon);margin-bottom:12px}
+.preview h1{font-family:var(--f-hk);font-size:30px;line-height:1.25;margin:0 0 18px}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px}
+.toolbar button{background:#ffffff0c;border:1px solid var(--line);border-radius:8px;padding:3px 10px;font-size:13px;cursor:pointer;color:var(--mute)}
+.toolbar button:hover{color:var(--paper)}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+th{text-align:left;font-weight:500;color:var(--mute);font-size:13px;padding:12px 16px;border-bottom:1px solid var(--line)}
+td{padding:12px 16px;border-bottom:1px solid var(--line-2);vertical-align:top}
+td .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.pill{font-family:var(--f-mono);font-size:11.5px;padding:2px 9px;border-radius:999px}
+.pill.pub{background:#6fe3b41f;color:var(--jade)}
+.pill.draft{background:#ffb54724;color:var(--amber)}
+.cm-text{max-width:460px;white-space:pre-wrap;overflow-wrap:anywhere;color:#d5dde7}
+.muted{color:var(--dim);font-family:var(--f-mono);font-size:12px}
+</style>
+</head>
+<body>
+<div class="city"></div>
+<nav class="nav"><div class="nav-in">
+  <a href="index.html" class="logo">bobs<b>.</b></a>
+  <a class="lk" href="index.html">主页</a>
+  <a class="lk" href="blog.html">博文</a>
+  <a class="lk" href="downloads.html">下载站</a>
+  <a class="lk on" href="admin.html">后台</a>
+</div></nav>
+
+<main>
+  <div id="cfgMsg"></div>
+
+  <!-- 登录 -->
+  <form class="login panel" id="loginBox" hidden>
+    <div class="eyebrow">Admin</div>
+    <h1>管理员登录</h1>
+    <p>登录后就可以写博文、管理评论。</p>
+    <div class="field"><label for="email">邮箱</label><input class="input" id="email" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="pwd">密码</label><input class="input" id="pwd" type="password" autocomplete="current-password" required></div>
+    <button class="btn btn-neon" id="loginBtn" type="submit">登录</button>
+    <p class="status" id="loginSt" role="status"></p>
+  </form>
+
+  <!-- 后台 -->
+  <div id="dash" hidden>
+    <div class="bar">
+      <h1>博客后台</h1>
+      <div class="who"><span id="whoami"></span><a class="btn btn-ghost btn-sm" href="blog.html" target="_blank" rel="noopener">查看博客 ↗</a><button class="btn btn-ghost btn-sm" id="logout" type="button">退出登录</button></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="write" class="on">✍️ 写文章</button>
+      <button type="button" data-tab="posts">📚 文章管理</button>
+      <button type="button" data-tab="comments">💬 评论管理</button>
+    </div>
+
+    <section data-pane="write">
+      <div class="editor">
+        <form class="ed-form panel" id="edForm">
+          <div class="field"><label for="title">标题</label><input class="input" id="title" maxlength="120" required placeholder="给文章起个名字"></div>
+          <div class="field"><label for="summary">摘要 <small>（可选，显示在文章列表里，不填就自动截取正文）</small></label><input class="input" id="summary" maxlength="300"></div>
+          <div class="ed-row">
+            <div class="field"><label for="tags">标签 <small>用逗号分隔</small></label><input class="input" id="tags" placeholder="开发日志, 纸间"></div>
+            <div class="field"><label for="cover">封面图地址 <small>（可选）</small></label><input class="input" id="cover" type="url" placeholder="https://… 或 assets/xxx.jpg"></div>
+          </div>
+          <div class="field">
+            <label for="content">正文 <small>支持 Markdown</small></label>
+            <div class="toolbar" id="toolbar">
+              <button type="button" data-md="## |">标题</button>
+              <button type="button" data-md="**|**">粗体</button>
+              <button type="button" data-md="*|*">斜体</button>
+              <button type="button" data-md="[|](https://)">链接</button>
+              <button type="button" data-md="![图片说明](|)">图片</button>
+              <button type="button" data-md="> |">引用</button>
+              <button type="button" data-md="- |">列表</button>
+              <button type="button" data-md="```&#10;|&#10;```">代码块</button>
+            </div>
+            <textarea class="input" id="content" required placeholder="开始写吧…"></textarea>
+          </div>
+          <label class="check"><input type="checkbox" id="published" checked>立即发布（不勾选就存为草稿，只有你能看到）</label>
+          <div class="ed-actions">
+            <button class="btn btn-neon" id="saveBtn" type="submit">发布文章</button>
+            <button class="btn btn-ghost" id="newBtn" type="button" hidden>放弃修改，写新文章</button>
+            <p class="status" id="edSt" role="status"></p>
+          </div>
+        </form>
+        <div class="preview panel">
+          <div class="pv-label">PREVIEW · 实时预览</div>
+          <h1 id="pvTitle">（还没有标题）</h1>
+          <div class="md" id="pvBody"></div>
+        </div>
+      </div>
+    </section>
+
+    <section data-pane="posts" hidden>
+      <div class="panel table-wrap">
+        <table><thead><tr><th>标题</th><th>状态</th><th>发布时间</th><th>评论</th><th style="text-align:right">操作</th></tr></thead><tbody id="postRows"></tbody></table>
+      </div>
+    </section>
+
+    <section data-pane="comments" hidden>
+      <div class="panel table-wrap">
+        <table><thead><tr><th>昵称</th><th>内容</th><th>文章</th><th>时间</th><th style="text-align:right">操作</th></tr></thead><tbody id="cmRows"></tbody></table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site">
+  <span>© 2026 Bobs · 博客后台</span>
+  <a href="index.html">回到主页</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/blog.js"></script>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const db = Blog.db;
+let editingId = null;
+const DRAFT_KEY = 'bobs-admin-draft';
+
+/* ---------- 登录 ---------- */
+async function boot(){
+  if (!Blog.ready) { Blog.notConfigured($('#cfgMsg')); return; }
+  const { data: { session } } = await db.auth.getSession();
+  show(session);
+  db.auth.onAuthStateChange((_e, s) => show(s));
+}
+function show(session){
+  const email = session?.user?.email || '';
+  const admin = email && (!Blog.cfg.adminEmail || email.toLowerCase() === Blog.cfg.adminEmail.toLowerCase());
+  $('#loginBox').hidden = !!admin; $('#dash').hidden = !admin;
+  if (session && !admin) { $('#loginSt').className = 'status err'; $('#loginSt').textContent = '这个账号不是管理员。'; db.auth.signOut(); }
+  if (admin) { $('#whoami').textContent = '已登录：' + email; loadPosts(); loadComments(); }
+}
+$('#loginBox').addEventListener('submit', async e => {
+  e.preventDefault(); const st = $('#loginSt'), b = $('#loginBtn');
+  b.disabled = true; st.className = 'status'; st.textContent = '登录中…';
+  const { error } = await db.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pwd').value });
+  b.disabled = false;
+  if (error) { st.className = 'status err'; st.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码不对，再检查一下。' : '登录失败：' + error.message; }
+  else { st.textContent = ''; $('#pwd').value = ''; }
+});
+$('#logout').onclick = () => db.auth.signOut();
+
+/* ---------- 标签页 ---------- */
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  $$('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $$('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab); });
+const goTab = t => $(`#tabs [data-tab="${t}"]`).click();
+
+/* ---------- 编辑器 ---------- */
+const fields = ['title', 'summary', 'tags', 'cover', 'content'];
+function preview(){
+  $('#pvTitle').textContent = $('#title').value.trim() || '（还没有标题）';
+  $('#pvBody').innerHTML = Blog.md($('#content').value) || '<p style="color:var(--dim)">正文预览会显示在这里。</p>';
+  if (!editingId) try { localStorage.setItem(DRAFT_KEY, JSON.stringify(Object.fromEntries(fields.map(f => [f, $('#' + f).value])))); } catch (_) {}
+}
+fields.forEach(f => $('#' + f).addEventListener('input', preview));
+$('#toolbar').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  const ta = $('#content'), [pre, post] = b.dataset.md.split('|'), s = ta.selectionStart, en = ta.selectionEnd, sel = ta.value.slice(s, en);
+  ta.setRangeText(pre + sel + post, s, en, 'end'); ta.selectionStart = ta.selectionEnd = s + pre.length + sel.length; ta.focus(); preview(); });
+
+function fill(p){
+  editingId = p?.id || null;
+  $('#title').value = p?.title || ''; $('#summary').value = p?.summary || '';
+  $('#tags').value = (p?.tags || []).join(', '); $('#cover').value = p?.cover || '';
+  $('#content').value = p?.content || ''; $('#published').checked = p ? p.published : true;
+  $('#saveBtn').textContent = editingId ? '保存修改' : '发布文章';
+  $('#newBtn').hidden = !editingId; $('#edSt').textContent = ''; preview();
+}
+$('#newBtn').onclick = () => { fill(null); try { localStorage.removeItem(DRAFT_KEY); } catch (_) {} };
+$('#published').addEventListener('change', () => { if (!editingId) $('#saveBtn').textContent = $('#published').checked ? '发布文章' : '保存草稿'; });
+
+$('#edForm').addEventListener('submit', async e => {
+  e.preventDefault(); const st = $('#edSt'), b = $('#saveBtn');
+  const row = {
+    title: $('#title').value.trim(), summary: $('#summary').value.trim(), cover: $('#cover').value.trim(),
+    content: $('#content').value, published: $('#published').checked,
+    tags: $('#tags').value.split(/[,，]/).map(t => t.trim()).filter(Boolean)
+  };
+  if (!row.title || !row.content.trim()) { st.className = 'status err'; st.textContent = '标题和正文都不能空着。'; return; }
+  b.disabled = true; st.className = 'status'; st.textContent = '保存中…';
+  const q = editingId ? db.from('posts').update(row).eq('id', editingId).select().single() : db.from('posts').insert(row).select().single();
+  const { data, error } = await q; b.disabled = false;
+  if (error) { st.className = 'status err'; st.textContent = '保存失败：' + error.message; return; }
+  try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+  fill(data);
+  st.className = 'status ok';
+  st.innerHTML = (data.published ? '已发布！' : '草稿已保存。') + ` <a href="post.html?id=${data.id}" target="_blank" rel="noopener" style="color:var(--neon)">去看看 ↗</a>`;
+  loadPosts();
+});
+
+/* ---------- 文章管理 ---------- */
+let posts = [];
+async function loadPosts(){
+  const { data, error } = await db.from('posts').select('id,title,summary,content,cover,tags,published,created_at,comments(count)').order('created_at', { ascending: false });
+  const tb = $('#postRows');
+  if (error) { tb.innerHTML = `<tr><td colspan="5" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
+  posts = data;
+  tb.innerHTML = data.length ? data.map(p => `<tr>
+    <td><b>${Blog.esc(p.title)}</b><div class="muted">${(p.tags || []).map(t => '#' + Blog.esc(t)).join(' ')}</div></td>
+    <td><span class="pill ${p.published ? 'pub' : 'draft'}">${p.published ? '已发布' : '草稿'}</span></td>
+    <td class="muted">${Blog.date(p.created_at, true)}</td>
+    <td class="muted">${p.comments?.[0]?.count ?? 0}</td>
+    <td><div class="acts">
+      <a class="btn btn-ghost btn-sm" href="post.html?id=${p.id}" target="_blank" rel="noopener">查看</a>
+      <button class="btn btn-ghost btn-sm" data-edit="${p.id}" type="button">编辑</button>
+      <button class="btn btn-ghost btn-sm" data-toggle="${p.id}" type="button">${p.published ? '转为草稿' : '发布'}</button>
+      <button class="btn btn-danger btn-sm" data-del="${p.id}" type="button">删除</button>
+    </div></td></tr>`).join('') : '<tr><td colspan="5" class="empty">还没有文章，去「写文章」写第一篇吧。</td></tr>';
+}
+// 删除要点两次，避免手滑
+function confirmTwice(btn, label){
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = label;
+  setTimeout(() => { delete btn.dataset.armed; btn.textContent = old; }, 3000); return false;
+}
+$('#postRows').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.edit) { fill(posts.find(p => p.id === b.dataset.edit)); goTab('write'); scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (b.dataset.toggle) { const p = posts.find(x => x.id === b.dataset.toggle); b.disabled = true;
+    await db.from('posts').update({ published: !p.published }).eq('id', p.id); loadPosts(); }
+  if (b.dataset.del && confirmTwice(b, '确认删除？')) { b.disabled = true;
+    const { error } = await db.from('posts').delete().eq('id', b.dataset.del);
+    if (error) { b.disabled = false; b.textContent = '删除失败'; return; }
+    if (editingId === b.dataset.del) fill(null);
+    loadPosts(); loadComments(); }
+});
+
+/* ---------- 评论管理 ---------- */
+async function loadComments(){
+  const { data, error } = await db.from('comments').select('id,author,content,is_admin,created_at,post_id,posts(title)').order('created_at', { ascending: false }).limit(200);
+  const tb = $('#cmRows');
+  if (error) { tb.innerHTML = `<tr><td colspan="5" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = data.length ? data.map(c => `<tr>
+    <td><b>${Blog.esc(c.author)}</b>${c.is_admin ? ' <span class="pill draft">博主</span>' : ''}</td>
+    <td><div class="cm-text">${Blog.esc(c.content)}</div></td>
+    <td><a href="post.html?id=${c.post_id}" target="_blank" rel="noopener" style="color:var(--neon)">${Blog.esc(c.posts?.title || '（已删除）')}</a></td>
+    <td class="muted">${Blog.date(c.created_at, true)}</td>
+    <td><div class="acts"><button class="btn btn-danger btn-sm" data-del="${c.id}" type="button">删除</button></div></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">还没有人评论。</td></tr>';
+}
+$('#cmRows').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-del]'); if (!b || !confirmTwice(b, '确认删除？')) return;
+  b.disabled = true; const { error } = await db.from('comments').delete().eq('id', b.dataset.del);
+  if (error) { b.disabled = false; b.textContent = '删除失败'; return; }
+  loadComments(); loadPosts();
+});
+
+/* ---------- 启动：恢复没写完的草稿 ---------- */
+try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); if (d) fields.forEach(f => $('#' + f).value = d[f] || ''); } catch (_) {}
+preview(); boot();
+</script>
+</body>
+</html>

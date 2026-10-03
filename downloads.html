@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bobs 下载站</title>
+<meta name="description" content="Bobs 开源项目的下载站：纸间 Paperroom Mac 版、源代码和更多。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+/* 布局：上面一块公告板，下面每个项目一张商品表样式的下载表 */
+.board{margin-top:30px;padding:22px 26px 28px}
+.board-hd{font-size:15px;color:#c4d0de;margin-bottom:10px}
+.board-body{text-align:center;display:grid;gap:4px;font-weight:700;font-size:clamp(15px,1.9vw,18px);line-height:1.7}
+.board-body .hot{color:var(--amber);text-shadow:0 0 18px #ffb54755}
+.board-body .ok{color:var(--paper)}
+.board-body .tip{color:var(--neon)}
+.board-body a{margin-top:16px;font-weight:500;font-size:15px;color:var(--neon);text-decoration:underline;text-underline-offset:4px}
+.board-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 30px;margin-top:20px;padding-top:18px;border-top:1px dashed var(--line);font-family:var(--f-mono);font-size:12.5px;color:var(--mute)}
+.board-stats b{color:var(--paper);font-size:15px;margin-right:4px;font-variant-numeric:tabular-nums}
+
+.cat{margin-top:18px;padding:20px 22px 10px}
+.cat-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px;margin:0 4px 14px}
+.cat-hd h2{margin:0;font-size:19px;font-weight:500}
+.cat-hd h2 small{font-family:var(--f-mono);font-size:12px;color:var(--dim);margin-left:10px;font-weight:400}
+.cat-hd a{font-size:13px;color:var(--mute);text-decoration:underline;text-underline-offset:3px}
+.cat-hd a:hover{color:var(--neon)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px;font-size:15px}
+thead th{background:#ffffff0d;font-weight:500;color:#dfe6ee;text-align:left;padding:13px 14px;white-space:nowrap}
+thead th:first-child{border-radius:10px 0 0 10px}
+thead th:last-child{border-radius:0 10px 10px 0;text-align:right}
+tbody td{padding:14px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tbody tr{transition:background .2s}
+tbody tr:hover{background:#4fd8ff0a}
+td.num{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap;color:#d5dde7}
+td.op{text-align:right;white-space:nowrap}
+td.op a{color:var(--neon);font-weight:500}
+td.op a:hover{text-decoration:underline;text-underline-offset:3px}
+.fname{display:flex;flex-direction:column;gap:3px}
+.fname b{font-weight:500}
+.fname small{font-size:12px;color:var(--dim)}
+.badge{display:inline-block;font-family:var(--f-mono);font-size:10.5px;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.badge.new{background:var(--amber);color:#1d1406}
+.badge.old{background:#ffffff14;color:var(--mute)}
+.badge.web{background:#6fe3b424;color:var(--jade)}
+.more-row td{text-align:center;padding:10px}
+.more-row button{background:none;border:0;color:var(--mute);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.more-row button:hover{color:var(--paper)}
+.old-row{display:none}
+.show-old .old-row{display:table-row}
+.foot-note{margin-top:22px;font-size:13px;color:var(--dim);text-align:center}
+.foot-note a{color:var(--mute);text-decoration:underline;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<div class="city"></div>
+<nav class="nav"><div class="nav-in">
+  <a href="index.html" class="logo">bobs<b>.</b></a>
+  <a class="lk" href="index.html">主页</a>
+  <a class="lk" href="blog.html">博文</a>
+  <a class="lk on" href="downloads.html">下载站</a>
+  <a class="lk" href="support.html">支持</a>
+</div></nav>
+
+<main>
+  <div class="eyebrow">Downloads</div>
+  <h1 class="page">下载站</h1>
+  <p class="lead">我的开源项目都可以在这里免费下载。文件全部来自 GitHub Releases，没有广告，也不用注册。</p>
+
+  <section class="board panel" aria-label="公告">
+    <div class="board-hd">公告：</div>
+    <div class="board-body">
+      <span class="hot" id="hotLine">纸间 Paperroom 最新版已发布！</span>
+      <span class="ok">Mac 版需要 Apple Silicon 芯片 + macOS 14 及以上</span>
+      <span class="tip">【全部免费 · 开源 · 无广告】</span>
+      <a href="https://github.com/haha362636-coder/paperroom/issues" target="_blank" rel="noopener">遇到问题？点击反馈</a>
+    </div>
+    <div class="board-stats">
+      <span><b id="stProjects">2</b>个项目</span>
+      <span><b id="stFiles">–</b>个文件</span>
+      <span><b id="stDl">–</b>次下载</span>
+    </div>
+  </section>
+
+  <div id="cats"><div class="skeleton" style="margin-top:18px"></div></div>
+
+  <p class="foot-note">第一次打开 Mac 版被系统拦住？到「系统设置 → 隐私与安全性」底部点「仍要打开」。<br>
+  下载数据来自 GitHub，偶尔加载不出来时会显示上次记录的文件列表。 · <a href="support.html">觉得好用？支持一下 ♥</a></p>
+</main>
+
+<footer class="site">
+  <span>© 2026 Bobs · <a href="index.html">回到主页</a></span>
+  <span><a href="https://github.com/haha362636-coder" target="_blank" rel="noopener">GitHub @haha362636-coder</a></span>
+</footer>
+
+<script>
+/* ---------- 要展示的项目（以后有新项目，往这里加一项就行） ---------- */
+const OWNER = 'haha362636-coder';
+const PROJECTS = [
+  { repo: 'paperroom', title: '纸间 Paperroom', note: '3D 皮面白板笔记',
+    extra: [{ name: '网页版（在线体验）', hint: '浏览器打开即用，需要支持 WebGL', url: 'https://haha362636-coder.github.io/paperroom/', open: true }] },
+  { repo: 'browserpro', title: 'browserpro', note: 'free ai browser', extra: [] },
+];
+// GitHub 接口访问不了时用的备用列表（2026-10-03 记录）
+const FALLBACK = {
+  paperroom: { branch: 'main', releases: [
+    { tag: 'v1.1.0', date: '2026-09-29T13:24:20Z', assets: [
+      ['Paperroom-1.1.0-mac-arm64.dmg', 5960068, 3], ['Paperroom-1.1.0-mac-arm64.dmg.sha256', 96, 0] ] },
+    { tag: 'v1.0.0', date: '2026-09-28T13:32:12Z', assets: [
+      ['Paperroom-1.0.0-mac-arm64.dmg', 5968586, 0], ['Paperroom-1.0-promo.mp4', 95338295, 2], ['Paperroom-1.0.0-mac-arm64.dmg.sha256', 105, 0] ] } ] },
+  browserpro: { branch: 'claude/minimal-ai-browser-xxihfu', releases: [] },
+};
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const size = b => b == null ? '—' : b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const day = iso => iso ? iso.slice(0, 10) : '—';
+function kind(name){
+  if (/\.dmg$/i.test(name)) return ['macOS 安装包', 'Apple Silicon · 拖进「应用程序」即可'];
+  if (/\.sha256$/i.test(name)) return ['校验文件', '用来确认安装包没有损坏'];
+  if (/\.(mp4|mov)$/i.test(name)) return ['宣传片', '视频文件'];
+  if (/\.zip$/i.test(name)) return ['压缩包', ''];
+  return ['文件', ''];
+}
+
+async function gh(path){
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${path}`, { headers: { Accept: 'application/vnd.github+json' } });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function loadRepo(repo){
+  try {
+    const [info, rels] = await Promise.all([gh(repo), gh(repo + '/releases?per_page=20')]);
+    return { live: true, branch: info.default_branch,
+      releases: rels.filter(r => !r.draft).map(r => ({ tag: r.tag_name, date: r.published_at,
+        assets: r.assets.map(a => [a.name, a.size, a.download_count, a.browser_download_url]) })) };
+  } catch (e) { return { live: false, ...FALLBACK[repo] }; }
+}
+
+function rowHtml(r){
+  return `<tr class="${r.old ? 'old-row' : ''}">
+    <td><div class="fname"><b>${esc(r.name)}${r.badge || ''}</b>${r.hint ? `<small>${esc(r.hint)}</small>` : ''}</div></td>
+    <td class="num">${esc(r.ver || '—')}</td>
+    <td class="num">${r.size}</td>
+    <td class="num">${r.date}</td>
+    <td class="num">${r.dl ?? '—'}</td>
+    <td class="op">${r.url ? `<a href="${esc(r.url)}" ${r.open ? 'target="_blank" rel="noopener"' : ''}>${r.open ? '打开' : '下载'}</a>` : '—'}</td></tr>`;
+}
+
+(async () => {
+  const data = await Promise.all(PROJECTS.map(p => loadRepo(p.repo)));
+  let files = 0, dls = 0, html = '';
+  PROJECTS.forEach((p, i) => {
+    const d = data[i], rows = [];
+    const repoUrl = `https://github.com/${OWNER}/${p.repo}`;
+    d.releases.forEach((rel, ri) => {
+      const old = ri > 0;
+      const rank = n => /\.dmg$/i.test(n) ? 0 : /\.(mp4|mov)$/i.test(n) ? 2 : 1;
+      [...rel.assets].sort((a, b) => rank(a[0]) - rank(b[0])).forEach(([name, bytes, count, url]) => {
+        const [k, hint] = kind(name);
+        files++; dls += count || 0;
+        rows.push({ name, hint: `${k}${hint ? ' · ' + hint : ''}`, ver: rel.tag, size: size(bytes), date: day(rel.date), dl: count,
+          url: url || `${repoUrl}/releases/download/${rel.tag}/${name}`, old,
+          badge: !old && /\.dmg$/i.test(name) ? '<span class="badge new">最新</span>' : old ? '<span class="badge old">旧版</span>' : '' });
+      });
+    });
+    // 源代码：有发布版本就打包最新版本，没有就打包默认分支
+    const latest = d.releases[0];
+    rows.push(latest
+      ? { name: `源代码 ${latest.tag}（zip）`, hint: '完整项目代码，可以自己改着玩', ver: latest.tag, size: '—', date: day(latest.date), url: `${repoUrl}/archive/refs/tags/${latest.tag}.zip` }
+      : { name: '源代码（zip）', hint: '最新的项目代码', ver: '开发中', size: '—', date: '—', url: `${repoUrl}/archive/refs/heads/${d.branch || 'main'}.zip` });
+    p.extra.forEach(x => rows.push({ ...x, ver: '在线', size: '—', date: '—', badge: '<span class="badge web">网页</span>' }));
+    // 新版排前面，旧版收起来（sort 是稳定的，同组内保持原顺序）
+    rows.forEach(r => r.old = !!r.old);
+    rows.sort((a, b) => a.old - b.old);
+    const oldN = rows.filter(r => r.old).length;
+    const total = d.releases.reduce((s, r) => s + r.assets.reduce((t, a) => t + (a[2] || 0), 0), 0);
+    html += `<section class="cat panel" id="p-${p.repo}">
+      <div class="cat-hd"><h2>${esc(p.title)} 相关下载<small>${esc(p.note)}${d.live ? '' : ' · 备用列表'}</small></h2>
+        <a href="${repoUrl}" target="_blank" rel="noopener">在 GitHub 查看 ↗</a></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>文件名称</th><th>版本</th><th>大小</th><th>更新日期</th><th>下载量</th><th>操作</th></tr></thead>
+        <tbody>${rows.map(rowHtml).join('')}
+        ${oldN ? `<tr class="more-row"><td colspan="6"><button type="button" data-more>展开 ${oldN} 个历史版本文件 ▾</button></td></tr>` : ''}</tbody>
+      </table></div>
+      <p class="status" style="margin:10px 4px 6px">累计下载 ${total} 次</p>
+    </section>`;
+  });
+  document.getElementById('cats').innerHTML = html;
+  document.getElementById('stFiles').textContent = files;
+  document.getElementById('stDl').textContent = dls;
+  const pr = data[0].releases[0];
+  if (pr) document.getElementById('hotLine').textContent = `纸间 Paperroom ${pr.tag} 已发布！`;
+})();
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-more]'); if (!b) return;
+  const sec = b.closest('.cat'), on = sec.classList.toggle('show-old');
+  b.textContent = on ? '收起历史版本 ▴' : `展开 ${sec.querySelectorAll('.old-row').length} 个历史版本文件 ▾`;
+});
+</script>
+</body>
+</html>

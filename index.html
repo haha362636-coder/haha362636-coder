@@ -379,10 +379,11 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
   <div class="nav-in">
     <a href="#top" class="logo">bobs<b>.</b></a>
     <a class="lk hide-s" href="#about">关于</a>
-    <a class="lk" href="#projects">项目</a>
-    <a class="lk hide-s" href="#mongkok">旺角</a>
-    <a class="lk" href="#bili">B站</a>
-    <a class="lk" href="support.html">支持</a>
+    <a class="lk hide-s" href="#projects">项目</a>
+    <a class="lk" href="blog.html">博文</a>
+    <a class="lk" href="downloads.html">下载站</a>
+    <a class="lk hide-s" href="#bili">B站</a>
+    <a class="lk hide-s" href="support.html">支持</a>
     <a class="btn btn-pri" style="padding:8px 16px;font-size:13px" href="https://github.com/haha362636-coder" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
@@ -536,7 +537,7 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
           <div class="links">
             <a class="btn btn-pri mag" href="https://github.com/haha362636-coder/paperroom" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z"/></svg>GitHub</a>
             <a class="btn btn-ghost mag" href="https://haha362636-coder.github.io/paperroom/" target="_blank" rel="noopener">▶ 在线体验</a>
-            <a class="btn btn-ghost mag" href="https://github.com/haha362636-coder/paperroom/releases/latest" target="_blank" rel="noopener">⬇ Mac 版</a>
+            <a class="btn btn-ghost mag" href="downloads.html">⬇ 下载站</a>
           </div>
         </div>
       </article>
@@ -668,6 +669,8 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
   <div class="foot-links">
     <a class="btn btn-ghost mag" href="https://github.com/haha362636-coder" target="_blank" rel="noopener">GitHub</a>
     <a class="btn btn-ghost mag" href="https://space.bilibili.com/3546936296606370" target="_blank" rel="noopener">Bilibili</a>
+    <a class="btn btn-ghost mag" href="blog.html">✎ 博文</a>
+    <a class="btn btn-ghost mag" href="downloads.html">⬇ 下载站</a>
     <a class="btn btn-ghost mag" href="support.html">♥ 支持我</a>
     <button class="btn btn-ghost mag" type="button" id="replay">↺ 再导览一次</button>
   </div>
@@ -737,6 +740,7 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
     <button type="button">用什么写代码？</button>
     <button type="button">旺角有什么好玩？</button>
     <button type="button">B站在哪？</button>
+    <button type="button">去哪下载？</button>
     <button type="button">怎么支持 Bobs？</button>
     <button type="button">再导览一次</button>
   </div>
@@ -976,9 +980,11 @@ async function botSay(html){ const t = add('<span class="typing"><i></i><i></i><
 const GH = 'https://github.com/haha362636-coder/paperroom', BILI = 'https://space.bilibili.com/3546936296606370';
 const KB = [
   [/再导览|导览|再逛|带我逛|tour/i, () => { setTimeout(() => tour(false), 900); return '好嘞！抓稳了，我们出发～'; }],
+  [/博文|博客|文章|日志|写了什么|评论|留言/i, 'Bobs 的博文都在 <a href="blog.html">博文页面</a>：开发日志、AI 编程心得和旺角见闻。每篇文章下面都可以留言评论哦～'],
+  [/下载站|下载|安装包|dmg|源码|源代码/i, '所有开源项目都能在 <a href="downloads.html">下载站</a> 免费下载：纸间的 Mac 安装包、历史版本、源代码都在那里，文件直接来自 GitHub Releases。'],
   [/支持|赞助|打赏|请.*喝|充电|爱发电/i, '谢谢你想支持 Bobs！可以去 <a href="support.html">支持页面</a> 看看，那里有赞助入口。不赞助也完全没关系，给纸间点个 Star、去 B站三连，同样是很大的鼓励～'],
   [/codex|claude|ai.*(编程|写代码)|怎么写代码|用什么写/i, 'Bobs 写代码主要靠 <b>Codex</b> 和 <b>Claude Code</b>：先用大白话描述想要的效果，让 AI 搭出第一版，再一边跑一边改，看不懂就追问。纸间就是这样一轮轮做出来的。'],
-  [/mac|下载|桌面|安装|dmg/i, `Mac 版到 <a href="${GH}/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 <b>Paperroom-1.1.0-mac-arm64.dmg</b>，支持 Apple Silicon、macOS 14 以上。第一次打开被拦的话，去「系统设置 → 隐私与安全性」点「仍要打开」。`],
+  [/mac|桌面版|怎么装/i, `Mac 版到 <a href="${GH}/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 <b>Paperroom-1.1.0-mac-arm64.dmg</b>，支持 Apple Silicon、macOS 14 以上。第一次打开被拦的话，去「系统设置 → 隐私与安全性」点「仍要打开」。`],
   [/磁带|录音|cassette/i, '纸间里可以对着麦克风录一盘磁带贴到白板上。磁带按真实尺寸 100.4 × 63.8 × 12 mm 建模，播放时带盘按 4.76 cm/s 转动，空盘转得比满盘快。单盘最长 15 分钟，每块白板最多 40 盘。'],
   [/贴纸|手绘|画/i, '纸间的手绘贴纸可以调画笔颜色和粗细，支持撤销、清空和导入本机图片，还能贴在文件夹上一起拖着走。'],
   [/browserpro|浏览器/i, `<b>browserpro</b> 是 Bobs 在 2026 年 8 月公开的 JavaScript 项目，简介是 free ai browser。<a href="https://github.com/haha362636-coder/browserpro" target="_blank" rel="noopener">去看看</a>`],
@@ -999,7 +1005,7 @@ const KB = [
   [/谢谢|thx|thank|爱你|可爱/i, '嘿嘿，被夸得抖起来了～ 不客气！'],
 ];
 function answer(q){ for (const [re, a] of KB) if (re.test(q)) return typeof a === 'function' ? a() : a;
-  return '这个问题我答不上来 qwq 我还在开发中，没有接入真正的 AI，只认识几个关键词：Bobs、纸间、browserpro、Codex、旺角、B站、支持。等 Bobs 把 AI 接上，我就能回答更多啦！'; }
+  return '这个问题我答不上来 qwq 我还在开发中，没有接入真正的 AI，只认识几个关键词：Bobs、纸间、browserpro、Codex、旺角、B站、博文、下载、支持。等 Bobs 把 AI 接上，我就能回答更多啦！'; }
 function ask(q){ q = q.trim(); if (!q) return; add(esc(q), 'me'); botSay(answer(q)); }
 $('#chatForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#chatInput'); ask(i.value); i.value = ''; });
 $('#quick').addEventListener('click', e => { if (e.target.tagName === 'BUTTON') ask(e.target.textContent); });

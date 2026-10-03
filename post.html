@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bobs 的博文</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.back{display:inline-flex;gap:6px;font-size:14px;color:var(--mute);margin-bottom:22px}
+.back:hover{color:var(--paper)}
+.article{padding:clamp(24px,5vw,48px)}
+.article h1{font-family:var(--f-hk);font-weight:900;font-size:clamp(30px,5vw,46px);line-height:1.2;margin:10px 0 14px;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--f-mono);font-size:12.5px;color:var(--dim);padding-bottom:22px;margin-bottom:26px;border-bottom:1px dashed var(--line)}
+.cover{width:100%;max-height:420px;object-fit:cover;border-radius:16px;margin-bottom:26px}
+
+.cm-wrap{margin-top:28px;padding:clamp(22px,4vw,36px)}
+.cm-wrap h2{margin:0 0 18px;font-family:var(--f-hk);font-size:22px}
+.cm-wrap h2 small{font-family:var(--f-mono);font-size:13px;color:var(--dim);font-weight:400;margin-left:8px}
+.cm-form{display:grid;gap:12px;margin-bottom:26px;position:relative}
+.cm-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cm-row .input{max-width:220px}
+.cm-row .status{flex:1}
+.cm-list{display:grid;gap:12px}
+.cm{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;padding:14px 16px;border-radius:14px;background:#ffffff06;border:1px solid var(--line-2)}
+.cm .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:var(--ink);background:var(--neon)}
+.cm.admin .av{background:var(--amber)}
+.cm b{font-size:14.5px}
+.cm .badge{font-family:var(--f-mono);font-size:11px;padding:1px 8px;border-radius:999px;background:#ffb54724;color:var(--amber);margin-left:6px}
+.cm time{font-family:var(--f-mono);font-size:11.5px;color:var(--dim);margin-left:8px}
+.cm p{margin:4px 0 0;font-size:14.5px;color:#d5dde7;white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="city"></div>
+<nav class="nav"><div class="nav-in">
+  <a href="index.html" class="logo">bobs<b>.</b></a>
+  <a class="lk" href="index.html">主页</a>
+  <a class="lk on" href="blog.html">博文</a>
+  <a class="lk" href="downloads.html">下载站</a>
+  <a class="lk" href="support.html">支持</a>
+</div></nav>
+
+<main class="narrow">
+  <a class="back" href="blog.html">← 全部博文</a>
+  <article class="article panel" id="article"><div class="skeleton"></div></article>
+
+  <section class="cm-wrap panel" id="cmWrap" hidden>
+    <h2>评论<small id="cmCount"></small></h2>
+    <form class="cm-form" id="cmForm" autocomplete="off">
+      <textarea class="input" id="cmText" rows="3" maxlength="1000" placeholder="说点什么吧…（最多 1000 字）" required></textarea>
+      <input class="hp" id="cmHp" tabindex="-1" aria-hidden="true" autocomplete="off">
+      <div class="cm-row">
+        <input class="input" id="cmName" maxlength="24" placeholder="你的昵称" required aria-label="昵称">
+        <button class="btn btn-neon" id="cmSend" type="submit">发表评论</button>
+        <p class="status" id="cmStatus" role="status"></p>
+      </div>
+    </form>
+    <div class="cm-list" id="cmList"></div>
+  </section>
+</main>
+
+<footer class="site">
+  <span>© 2026 Bobs · <a href="index.html">回到主页</a></span>
+  <a href="admin.html">管理后台</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/blog.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const id = new URLSearchParams(location.search).get('id');
+const article = $('#article');
+
+async function loadComments(){
+  const { data, error } = await Blog.db.from('comments').select('id,author,content,is_admin,created_at')
+    .eq('post_id', id).order('created_at', { ascending: true });
+  if (error) { $('#cmList').innerHTML = `<p class="status err">评论加载失败：${Blog.esc(error.message)}</p>`; return; }
+  $('#cmCount').textContent = `${data.length} 条`;
+  $('#cmList').innerHTML = data.length ? data.map(c => `
+    <div class="cm${c.is_admin ? ' admin' : ''}">
+      <div class="av">${Blog.esc([...c.author.trim()][0] || '?')}</div>
+      <div><b>${Blog.esc(c.author)}</b>${c.is_admin ? '<span class="badge">博主</span>' : ''}<time>${Blog.date(c.created_at, true)}</time>
+      <p>${Blog.esc(c.content)}</p></div>
+    </div>`).join('') : '<p class="status">还没有评论，来抢沙发吧～</p>';
+}
+
+$('#cmForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const st = $('#cmStatus'), btn = $('#cmSend');
+  if ($('#cmHp').value) return;                       // 机器人才会填这个隐藏框
+  const author = $('#cmName').value.trim(), content = $('#cmText').value.trim();
+  if (!author || !content) { st.className = 'status err'; st.textContent = '昵称和内容都要填哦'; return; }
+  btn.disabled = true; st.className = 'status'; st.textContent = '发送中…';
+  const { error } = await Blog.db.from('comments').insert({ post_id: id, author, content });
+  btn.disabled = false;
+  if (error) { st.className = 'status err'; st.textContent = '没发出去：' + error.message; return; }
+  try { localStorage.setItem('bobs-cm-name', author); } catch (_) {}
+  $('#cmText').value = ''; st.className = 'status ok'; st.textContent = '评论成功，谢谢你！';
+  loadComments();
+});
+try { $('#cmName').value = localStorage.getItem('bobs-cm-name') || ''; } catch (_) {}
+
+(async () => {
+  if (!Blog.ready) { Blog.notConfigured(article); return; }
+  if (!id) { article.innerHTML = '<div class="empty">没有指定文章。<a href="blog.html" style="color:var(--neon)">去看看全部博文 →</a></div>'; return; }
+  const { data: p, error } = await Blog.db.from('posts').select('*').eq('id', id).maybeSingle();
+  if (error || !p) { article.innerHTML = `<div class="empty">${error ? '加载失败：' + Blog.esc(error.message) : '这篇文章不存在，或者已经被删除了。'}<br><a href="blog.html" style="color:var(--neon)">回到全部博文 →</a></div>`; return; }
+  document.title = p.title + ' · Bobs';
+  article.innerHTML = `
+    <div class="tags">${(p.tags || []).map(t => `<span class="tag">#${Blog.esc(t)}</span>`).join('')}</div>
+    <h1>${Blog.esc(p.title)}</h1>
+    <div class="meta"><span>${Blog.date(p.created_at)}</span>${p.updated_at && Blog.date(p.updated_at) !== Blog.date(p.created_at) ? `<span>更新于 ${Blog.date(p.updated_at)}</span>` : ''}<span>约 ${Blog.readMin(p.content)} 分钟读完</span>${p.published ? '' : '<span style="color:var(--amber)">草稿（只有你能看到）</span>'}</div>
+    ${p.cover ? `<img class="cover" src="${Blog.esc(p.cover)}" alt="">` : ''}
+    <div class="md">${Blog.md(p.content)}</div>`;
+  if (p.published) { $('#cmWrap').hidden = false; loadComments(); }
+})();
+</script>
+</body>
+</html>

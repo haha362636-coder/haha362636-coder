@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bobs 的博文</title>
+<meta name="description" content="Bobs 的开发日志、AI 编程笔记和旺角见闻。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:34px 0 22px}
+.tools .input{max-width:320px;border-radius:999px;padding:9px 16px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{background:#0a1322b3;border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:13px;color:var(--mute);cursor:pointer;transition:.2s}
+.chips button:hover{color:var(--paper)}
+.chips button.on{background:var(--amber);border-color:var(--amber);color:#1d1406}
+.list{display:grid;gap:16px}
+.card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;padding:24px 26px;transition:transform .45s var(--spring),border-color .3s}
+.card:hover{transform:translateY(-4px);border-color:#4fd8ff66}
+.card.has-cover{grid-template-columns:200px minmax(0,1fr)}
+@media (max-width:640px){.card,.card.has-cover{grid-template-columns:1fr}}
+.card .cover{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:14px;background:#05080e}
+.card h2{margin:6px 0 6px;font-family:var(--f-hk);font-size:clamp(21px,2.6vw,26px);line-height:1.3}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--f-mono);font-size:12px;color:var(--dim);align-items:center}
+.meta .draft{color:var(--amber)}
+.count{font-family:var(--f-mono);font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="city"></div>
+<nav class="nav"><div class="nav-in">
+  <a href="index.html" class="logo">bobs<b>.</b></a>
+  <a class="lk" href="index.html">主页</a>
+  <a class="lk on" href="blog.html">博文</a>
+  <a class="lk" href="downloads.html">下载站</a>
+  <a class="lk" href="support.html">支持</a>
+</div></nav>
+
+<main class="narrow">
+  <div class="eyebrow">Blog</div>
+  <h1 class="page">博文<em> & 日志</em></h1>
+  <p class="lead">开发纸间的过程、用 Codex 和 Claude Code 写代码的心得，还有去旺角闲逛的见闻，都会写在这里。</p>
+
+  <div class="tools">
+    <input class="input" id="q" type="search" placeholder="搜索文章标题或内容…" aria-label="搜索文章">
+    <div class="chips" id="chips"></div>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="list" id="list">
+    <div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+</main>
+
+<footer class="site">
+  <span>© 2026 Bobs · <a href="index.html">回到主页</a></span>
+  <a href="admin.html">管理后台</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/blog.js"></script>
+<script>
+const list = document.getElementById('list'), q = document.getElementById('q'), chips = document.getElementById('chips'), count = document.getElementById('count');
+let posts = [], tag = '';
+
+function render(){
+  const kw = q.value.trim().toLowerCase();
+  const shown = posts.filter(p => (!tag || (p.tags || []).includes(tag)) &&
+    (!kw || (p.title + p.summary + p.content).toLowerCase().includes(kw)));
+  count.textContent = `共 ${shown.length} 篇`;
+  if (!shown.length) { list.innerHTML = `<div class="panel empty">${posts.length ? '没有找到相关文章，换个关键词试试。' : '还没有文章，敬请期待～'}</div>`; return; }
+  list.innerHTML = shown.map(p => `
+    <a class="card panel${p.cover ? ' has-cover' : ''}" href="post.html?id=${encodeURIComponent(p.id)}">
+      ${p.cover ? `<img class="cover" src="${Blog.esc(p.cover)}" alt="" loading="lazy">` : ''}
+      <div style="min-width:0">
+        <div class="tags">${(p.tags || []).map(t => `<span class="tag">#${Blog.esc(t)}</span>`).join('')}</div>
+        <h2>${Blog.esc(p.title)}</h2>
+        <p>${Blog.esc(p.summary || p.content.replace(/[#>*_`\-\[\]()!]/g, '').slice(0, 120))}</p>
+        <div class="meta">
+          <span>${Blog.date(p.created_at)}</span>
+          <span>约 ${Blog.readMin(p.content)} 分钟读完</span>
+          <span>💬 ${p.comments?.[0]?.count ?? 0}</span>
+        </div>
+      </div>
+    </a>`).join('');
+}
+
+function renderChips(){
+  const all = [...new Set(posts.flatMap(p => p.tags || []))];
+  chips.innerHTML = all.length ? ['', ...all].map(t => `<button type="button" data-t="${Blog.esc(t)}" class="${t === tag ? 'on' : ''}">${t ? '#' + Blog.esc(t) : '全部'}</button>`).join('') : '';
+}
+chips.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tag = b.dataset.t; renderChips(); render(); });
+q.addEventListener('input', render);
+
+(async () => {
+  if (!Blog.ready) { Blog.notConfigured(list); return; }
+  const { data, error } = await Blog.db.from('posts')
+    .select('id,title,summary,content,cover,tags,created_at,comments(count)')
+    .eq('published', true).order('created_at', { ascending: false });
+  if (error) { list.innerHTML = `<div class="notice"><b>文章加载失败：</b>${Blog.esc(error.message)}<br>刷新页面试试；如果一直这样，检查 Supabase 项目是否处于暂停状态。</div>`; return; }
+  posts = data || []; renderChips(); render();
+})();
+</script>
+</body>
+</html>

@@ -3,10 +3,13 @@
 Bobs 的个人博客：开源项目「纸间 Paperroom」、B站空间，还有一只会带路的果冻小导游「啵啵」（AI 功能开发中）。
 
 - 主页：`index.html`
+- 博文：`blog.html`（列表）、`post.html`（文章 + 评论）
+- 管理后台：`admin.html`（登录后写博文、管理评论）
+- 下载站：`downloads.html`（自动读取 GitHub Releases）
 - 支持页：`support.html`
-- 图片：`assets/`
+- 图片：`assets/`，共用样式和脚本：`css/`、`js/`
 
-纯静态网页，不需要构建，直接用 GitHub Pages 托管。
+网页本身是纯静态的，用 GitHub Pages 托管；博文、评论和管理员登录存在 Supabase，数据库结构见 `supabase/schema.sql`，连接信息填在 `js/config.js`。
 
 ## 图片来源
 
