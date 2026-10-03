@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bobs 的小宇宙</title>
+<meta name="description" content="Bobs 的个人博客：开源项目、B站视频，还有一只会带路的果冻 AI 小导游。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 旺角夜街做底，雨夜玻璃面板叠在街景上；单栏叙事，果冻导游陪逛，最后停在右下角 */
+:root{
+  color-scheme: dark;
+  --ink:#08101c;        /* 夜色 */
+  --glass:#0c1626b8;    /* 玻璃面板 */
+  --line:#ffffff1c;
+  --paper:#f2eee4;      /* 主文字：旧纸色 */
+  --mute:#9fb0c4;
+  --neon:#4fd8ff;       /* 主强调：霓虹青 */
+  --amber:#ffb547;      /* 次强调：招牌琥珀 */
+  --jade:#6fe3b4;       /* 点缀：玉绿 */
+  --bili:#00a1d6;
+
+  --f-display:"Instrument Serif", Georgia, serif;
+  --f-hk:"Noto Serif TC", "Songti TC", "Noto Serif SC", serif;
+  --f-body:"Noto Sans SC", -apple-system, "PingFang SC", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--f-body);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+::selection{background:var(--neon);color:var(--ink)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
+
+/* ---------- 街景背景 ---------- */
+.city{position:fixed;inset:0;z-index:0;background:url("assets/hk-street.jpg") center 30%/cover no-repeat;transform:scale(1.08);will-change:transform}
+.city::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#08101c18 0%,#08101c55 45%,#08101cc8 100%),radial-gradient(ellipse at 50% 125%,#08101ccc 15%,transparent 65%)}
+.tint{position:fixed;inset:0;z-index:0;background:#08101c;opacity:0;pointer-events:none}
+#rain{position:fixed;inset:0;z-index:1;pointer-events:none}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.08;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.spot{position:fixed;width:560px;height:560px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,#4fd8ff14,transparent 65%);transform:translate(-50%,-50%);left:-999px;top:-999px}
+
+/* ---------- 导航 ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;justify-content:center;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0}
+.nav-in{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 18px;border-radius:999px;background:#0a1322cc;border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.logo{font-family:var(--f-display);font-size:24px;font-style:italic;margin-right:10px;line-height:1}
+.logo b{color:var(--neon);font-style:normal}
+.nav a.lk{font-size:14px;color:var(--mute);padding:6px 11px;border-radius:999px;transition:.25s}
+.nav a.lk:hover{color:var(--paper);background:#ffffff10}
+@media (max-width:640px){.nav a.lk.hide-s{display:none}}
+
+/* ---------- 通用 ---------- */
+main{position:relative;z-index:2}
+.wrap{max-width:1140px;margin:0 auto;padding-inline:clamp(16px,4vw,40px)}
+section{padding-block:clamp(70px,10vw,130px)}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--neon);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:28px;height:1px;background:currentColor;opacity:.6}
+h2{font-family:var(--f-hk);font-weight:900;font-size:clamp(34px,5vw,58px);line-height:1.15;margin:16px 0 0;text-wrap:balance}
+h2 em{font-family:var(--f-display);font-weight:400;color:var(--amber)}
+.lead{color:#c4d0de;max-width:62ch;margin-top:16px;font-size:17px}
+h2,.lead,.eyebrow,.hi,.bio{text-shadow:0 2px 14px #08101c,0 0 4px #08101caa}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:26px;backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2)}
+
+.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-weight:500;font-size:15px;border:0;font-family:inherit;cursor:pointer;color:inherit;transition:transform .35s var(--spring),background .25s,box-shadow .25s}
+.btn svg{width:18px;height:18px;flex:none}
+.btn-pri{background:var(--paper);color:var(--ink)}
+.btn-pri:hover{box-shadow:0 12px 40px -8px #4fd8ffaa}
+.btn-ghost{border:1px solid var(--line);background:#ffffff0a}
+.btn-ghost:hover{background:#ffffff18}
+.btn-bili{background:var(--bili);color:#fff}
+.btn-bili:hover{box-shadow:0 12px 40px -8px #00a1d6cc}
+
+/* ---------- Hero ---------- */
+.hero{min-height:100svh;display:grid;align-items:center;padding-block:120px 90px;position:relative}
+.hero-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(32px,6vw,80px);align-items:center}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr;justify-items:center;text-align:center}}
+
+.avatar{position:relative;width:clamp(220px,26vw,290px);max-width:100%;display:flex;flex-direction:column;align-items:center;gap:22px}
+.av-frame{position:relative;width:100%;aspect-ratio:1}
+.av-frame .ring{position:absolute;inset:-12px;border-radius:50%;background:conic-gradient(from 0deg,var(--neon),var(--jade),var(--amber),var(--neon));animation:spin 8s linear infinite;
+  -webkit-mask:radial-gradient(circle,transparent 63%,#000 64%,#000 66.5%,transparent 67.5%);mask:radial-gradient(circle,transparent 63%,#000 64%,#000 66.5%,transparent 67.5%);filter:drop-shadow(0 0 10px #4fd8ff)}
+.av-frame .ring2{position:absolute;inset:-28px;border-radius:50%;border:1px dashed #ffffff30;animation:spin 40s linear infinite reverse}
+.av-frame .face{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#e9f6ff,#9fd3ee 70%,#5c8fb8);box-shadow:0 30px 80px -20px #4fd8ff66,inset 0 0 0 4px #ffffff22}
+.av-frame .face img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--spring)}
+.av-frame:hover .face img{transform:scale(1.08) rotate(-3deg)}
+.av-frame .tag{position:absolute;right:-8%;bottom:6%;font-family:var(--f-mono);font-size:12px;background:var(--paper);color:var(--ink);padding:5px 11px;border-radius:999px;box-shadow:0 8px 24px #0008;white-space:nowrap}
+.av-frame .tag i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2fcf86;margin-right:6px;animation:pulse 2s infinite}
+.sparkle{position:absolute;color:var(--amber);font-size:20px;animation:twinkle 2.4s ease-in-out infinite}
+/* 香港路牌 */
+.street-sign{background:#fbfbf7;color:#111;border-radius:6px;padding:6px 18px 7px;box-shadow:0 10px 30px -8px #000c,inset 0 0 0 3px #fbfbf7,inset 0 0 0 4.5px #111;text-align:center;line-height:1.15;transform:rotate(-2deg)}
+.street-sign b{display:block;font-family:var(--f-hk);font-size:22px;letter-spacing:.3em;margin-right:-.3em}
+.street-sign span{font-family:"Arial Narrow",Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:.12em}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #2fcf8688}50%{box-shadow:0 0 0 6px #2fcf8600}}
+@keyframes twinkle{50%{transform:scale(.4) rotate(90deg);opacity:.3}}
+
+.hi{font-family:var(--f-mono);font-size:14px;color:var(--mute)}
+.name{font-family:var(--f-display);font-size:clamp(90px,15vw,190px);line-height:.85;margin:6px 0 8px;letter-spacing:-.03em;font-weight:400;text-shadow:0 0 40px #4fd8ff44}
+.name .dot{color:var(--neon)}
+.role{font-family:var(--f-hk);font-size:clamp(20px,2.4vw,28px);font-weight:600}
+.role .typed{color:var(--amber);border-right:2px solid var(--amber);padding-right:4px;animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{border-color:transparent}}
+.bio{color:#cfd8e3;max-width:52ch;margin:16px 0 0}
+@media (max-width:860px){.bio{margin-inline:auto}}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+@media (max-width:860px){.chips,.cta,.facts{justify-content:center}}
+.chip{font-size:13px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#0a132299;backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:8px}
+.chip svg{width:15px;height:15px;color:var(--neon)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.facts{display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,36px);margin-top:30px;padding-top:22px;border-top:1px solid var(--line)}
+.facts div{display:flex;flex-direction:column}
+.facts b{font-family:var(--f-display);font-size:34px;font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
+.facts small{font-size:12px;color:var(--mute);margin-top:6px}
+
+/* 竖排霓虹招牌 */
+.neon-sign{position:absolute;right:clamp(10px,3vw,40px);top:18%;writing-mode:vertical-rl;font-family:var(--f-hk);font-weight:900;font-size:30px;letter-spacing:.25em;
+  padding:22px 12px;border:2px solid var(--amber);border-radius:10px;color:#fff3dc;
+  text-shadow:0 0 6px var(--amber),0 0 18px var(--amber),0 0 40px #ff8a00;box-shadow:0 0 14px #ffb54788,inset 0 0 14px #ffb54755;animation:flicker 6s infinite}
+.neon-sign small{font-size:13px;letter-spacing:.3em;color:var(--neon);text-shadow:0 0 8px var(--neon);margin-top:12px}
+@keyframes flicker{0%,18%,22%,62%,64%,100%{opacity:1}20%,63%{opacity:.35}}
+@media (max-width:1100px){.neon-sign{display:none}}
+
+.intro .pop{opacity:0;transform:scale(.4) translateY(30px)}
+.pop.in{animation:popIn .8s var(--spring) forwards}
+@keyframes popIn{0%{opacity:0;transform:scale(.4) translateY(30px)}100%{opacity:1;transform:none}}
+.scroll-hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll-hint i{width:1px;height:40px;background:linear-gradient(var(--neon),transparent);animation:drip 2s infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- About ---------- */
+.about-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;margin-top:46px}
+@media (max-width:860px){.about-grid{grid-template-columns:1fr}}
+.about-text{padding:clamp(24px,4vw,40px)}
+.about-text p{margin:0 0 1em;color:#d5dde7;max-width:62ch}
+.about-text p:last-child{margin:0}
+.about-text p:first-child::first-letter{font-family:var(--f-hk);font-size:3.1em;float:left;line-height:1;margin:4px 10px 0 0;color:var(--amber)}
+.side{display:grid;gap:20px;align-content:start}
+.now{padding:24px 26px}
+.now h4,.stack-wrap h4{margin:0 0 12px;font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;color:var(--neon);font-weight:500;text-transform:uppercase}
+.now ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.now li{display:flex;gap:12px;align-items:baseline;font-size:14.5px;color:#d5dde7}
+.now li span{font-family:var(--f-mono);font-size:11px;color:var(--ink);background:var(--amber);border-radius:6px;padding:1px 7px;flex:none}
+.stack-wrap{padding:24px 26px}
+.stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stack div{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#ffffff06;transition:.35s var(--spring)}
+.stack div:hover{border-color:#4fd8ff77;transform:translateY(-3px)}
+.stack b{display:block;font-family:var(--f-mono);font-size:13.5px;font-weight:500}
+.stack small{color:var(--mute);font-size:12px}
+
+/* ---------- Projects ---------- */
+.proj{margin-top:50px;display:grid;grid-template-columns:1.2fr 1fr;overflow:hidden;position:relative;transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+.proj:hover{box-shadow:0 40px 100px -30px #4fd8ff40}
+.proj::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),#ffffff0f,transparent 40%)}
+@media (max-width:900px){.proj{grid-template-columns:1fr}}
+.shots{position:relative;min-height:320px;background:#05080e;overflow:hidden}
+.shots img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .8s,transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.shots img+img{opacity:0}
+.shots:hover img:first-child{opacity:0}
+.shots:hover img+img{opacity:1;transform:scale(1.04)}
+.shots .badge{position:absolute;left:18px;top:18px;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;padding:6px 12px;border-radius:999px;background:#08101ccc;border:1px solid #ffffff30;z-index:2}
+.shots .hint{position:absolute;right:16px;bottom:14px;font-size:12px;color:#ffffffaa;z-index:2;font-family:var(--f-mono)}
+.proj-body{padding:clamp(24px,4vw,42px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.proj-body h3{margin:0;font-family:var(--f-hk);font-size:clamp(32px,3.6vw,44px);font-weight:900;line-height:1.1}
+.proj-body h3 small{display:block;font-family:var(--f-display);font-style:italic;font-weight:400;font-size:.6em;color:var(--amber);margin-top:4px}
+.proj-body p{margin:0;color:#ccd6e2}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tags span{font-family:var(--f-mono);font-size:12px;padding:4px 10px;border-radius:8px;background:#4fd8ff14;color:var(--neon)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:6px}
+.links .btn{padding:10px 18px;font-size:14px}
+.star{font-family:var(--f-mono);font-size:12px;color:var(--amber)}
+
+.feats{margin-top:20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.feats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.feats{grid-template-columns:1fr}}
+.feat{padding:22px;border-radius:20px;transition:transform .45s var(--spring),border-color .3s}
+.feat:hover{transform:translateY(-6px);border-color:#4fd8ff66}
+.feat .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#4fd8ff18;color:var(--neon);margin-bottom:12px}
+.feat .ic svg{width:22px;height:22px}
+.feat b{display:block;font-size:16px;margin-bottom:4px}
+.feat p{margin:0;font-size:13.5px;color:var(--mute);line-height:1.65}
+
+.spec{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:860px){.spec{grid-template-columns:1fr}}
+.spec .panel{padding:24px 26px;min-width:0}
+.spec h4{margin:0 0 14px;font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;color:var(--neon);font-weight:500;text-transform:uppercase}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:9px 20px;font-size:14px;margin:0}
+.kv dt{color:var(--mute)}
+.kv dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.langbar{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:6px 0 14px;gap:2px}
+.langbar i{display:block;height:100%}
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;font-size:13px;font-variant-numeric:tabular-nums}
+.legend span{display:flex;align-items:center;gap:8px;color:#d5dde7}
+.legend span::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+.legend em{font-style:normal;color:var(--mute);margin-left:auto}
+.changelog{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;display:grid;gap:8px;font-size:13.5px}
+.changelog div{display:flex;gap:12px}
+.changelog code{font-family:var(--f-mono);color:var(--amber);flex:none}
+.changelog span{color:#cfd8e3}
+
+.side-proj{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.side-proj{grid-template-columns:1fr}}
+.mini-proj{padding:24px 26px;display:flex;flex-direction:column;gap:10px;transition:transform .45s var(--spring)}
+.mini-proj:hover{transform:translateY(-5px)}
+.mini-proj h3{margin:0;font-family:var(--f-mono);font-size:19px;font-weight:500}
+.mini-proj p{margin:0;color:var(--mute);font-size:14px}
+.mini-proj .meta{display:flex;gap:16px;font-family:var(--f-mono);font-size:12px;color:var(--mute);margin-top:auto}
+.mini-proj.dashed{border-style:dashed;background:#0c162680}
+
+/* ---------- Timeline ---------- */
+.tl{margin-top:46px;position:relative;display:grid;gap:18px;padding-left:34px}
+.tl::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--neon),var(--amber),transparent)}
+.tl-item{position:relative;padding:18px 22px}
+.tl-item::before{content:"";position:absolute;left:-31px;top:24px;width:14px;height:14px;border-radius:50%;background:var(--ink);border:3px solid var(--neon);box-shadow:0 0 12px var(--neon)}
+.tl-item time{font-family:var(--f-mono);font-size:12.5px;color:var(--amber)}
+.tl-item b{display:block;font-size:17px;margin:2px 0}
+.tl-item p{margin:0;color:var(--mute);font-size:14px}
+
+.bio b,.about-text b{color:var(--neon);font-weight:500}
+
+/* ---------- 我和 AI ---------- */
+.flow{list-style:none;margin:46px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;counter-reset:f}
+@media (max-width:1000px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.flow{grid-template-columns:1fr}}
+.flow li{counter-increment:f;padding:22px 20px;border-radius:20px;position:relative;transition:transform .45s var(--spring)}
+.flow li:hover{transform:translateY(-6px)}
+.flow li::before{content:"0" counter(f);display:block;font-family:var(--f-display);font-size:40px;line-height:1;color:var(--amber);margin-bottom:10px}
+.flow b{display:block;font-size:16px;margin-bottom:6px}
+.flow p{margin:0;font-size:13.5px;color:var(--mute);line-height:1.65}
+.ai-pair{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.ai-pair{grid-template-columns:1fr}}
+.ai-pair .panel{padding:24px 26px}
+.ai-pair h3{margin:0 0 6px;font-family:var(--f-mono);font-size:18px;font-weight:500;color:var(--neon)}
+.ai-pair p{margin:0;color:#cfd8e3;font-size:14.5px}
+
+/* ---------- 旺角 ---------- */
+.spots{margin-top:44px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.spots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.spots{grid-template-columns:1fr}}
+.spot-card{padding:22px 24px;transition:transform .45s var(--spring),border-color .3s}
+.spot-card:hover{transform:translateY(-6px) rotate(-.6deg);border-color:#ffb54766}
+.spot-card small{font-family:var(--f-mono);font-size:11.5px;color:var(--amber);letter-spacing:.06em}
+.spot-card b{display:block;font-family:var(--f-hk);font-size:21px;margin:4px 0 6px}
+.spot-card p{margin:0;font-size:14px;color:#cfd8e3}
+
+/* ---------- Bilibili 横幅 ---------- */
+.band{position:relative;overflow:hidden}
+.band::before{content:"";position:absolute;inset:0;background:url("assets/hk-mongkok.jpg") center/cover;filter:saturate(.8) brightness(.62) hue-rotate(160deg);transform:scale(1.1)}
+.band::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--ink),#08101c66 30%,#08101c66 70%,var(--ink))}
+.band .wrap{position:relative;z-index:2}
+.bili{margin-top:44px;padding:clamp(26px,5vw,52px);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:30px;align-items:center;position:relative;overflow:hidden}
+@media (max-width:860px){.bili{grid-template-columns:1fr;text-align:center;justify-items:center}}
+.tv{width:110px;height:94px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-3deg)}}
+.bili h3{margin:0;font-family:var(--f-hk);font-size:clamp(24px,3vw,34px);font-weight:900}
+.bili p{margin:6px 0 0;color:#cfd8e3}
+.bili .uid{font-family:var(--f-mono);font-size:12px;color:var(--neon);margin-top:10px;word-break:break-all}
+.bili-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+@media (max-width:860px){.bili-list{justify-content:center}}
+.bili-list span{font-size:12.5px;padding:4px 11px;border-radius:999px;background:#00a1d622;color:#9fe3ff;border:1px solid #00a1d655}
+.danmaku{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.danmaku span{position:absolute;white-space:nowrap;font-size:14px;color:#ffffff40;animation:dm linear infinite;left:100%}
+@keyframes dm{to{transform:translateX(calc(-100vw - 100%))}}
+
+/* ---------- FAQ ---------- */
+.faq{margin-top:40px;display:grid;gap:12px}
+.faq details{padding:0 24px;border-radius:18px}
+.faq summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:500;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--f-mono);color:var(--neon);font-size:20px;line-height:1;transition:transform .4s var(--spring)}
+.faq details[open] summary::after{transform:rotate(135deg)}
+.faq details p{margin:0 0 18px;color:#cfd8e3;font-size:14.5px;max-width:70ch}
+.faq a{color:var(--neon);text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- Footer ---------- */
+footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;text-align:center}
+.end{font-family:var(--f-display);font-style:italic;font-size:clamp(60px,11vw,140px);line-height:1;color:transparent;-webkit-text-stroke:1px #4fd8ff66;margin:0;text-shadow:0 0 40px #4fd8ff22}
+.end-cn{font-family:var(--f-hk);color:var(--mute);margin-top:10px}
+.foot-links{display:flex;justify-content:center;gap:12px;margin-top:28px;flex-wrap:wrap}
+.credits{font-size:12px;color:#7d8da0;margin:44px auto 0;max-width:70ch;line-height:1.7}
+.credits a{text-decoration:underline;text-underline-offset:2px}
+.copy{font-family:var(--f-mono);font-size:12px;color:#7d8da0;margin-top:14px}
+
+.bounce-top{animation:bounceTop 1.1s var(--spring)}
+@keyframes bounceTop{0%{transform:translateY(100px)}40%{transform:translateY(-20px)}70%{transform:translateY(7px)}100%{transform:none}}
+.rv{transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.js .rv:not(.seen){opacity:.001;transform:translateY(40px)}
+
+/* ---------- 开场遮罩 ---------- */
+#curtain{position:fixed;inset:0;z-index:80;background:radial-gradient(circle at 50% 45%,#10203a,#08101c 70%);display:grid;place-items:center;transition:opacity 1s ease,visibility 1s}
+#curtain.gone{opacity:0;visibility:hidden}
+#curtain .sign{font-family:var(--f-display);font-style:italic;font-size:clamp(70px,14vw,140px);color:#e8fbff;opacity:.08;transition:.2s;transform:translateY(-22vh)}
+#curtain .sign.on{opacity:1;text-shadow:0 0 8px var(--neon),0 0 24px var(--neon),0 0 60px #0090ff}
+#curtain .load{position:absolute;bottom:12vh;font-family:var(--f-mono);font-size:12px;letter-spacing:.2em;color:var(--mute)}
+#curtain .load b{color:var(--neon)}
+#skip{position:fixed;z-index:95;right:16px;top:calc(16px + env(safe-area-inset-top,0px));font-family:var(--f-mono);font-size:12px;color:var(--mute);background:#0a1322cc;border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer}
+#skip:hover{color:var(--paper)}
+
+/* ---------- 果冻导游「啵啵」 ---------- */
+#guide{position:fixed;left:0;top:0;z-index:90;width:120px;height:120px;transition:transform 1.05s var(--spring);will-change:transform;touch-action:none;cursor:grab}
+#guide.dragging{transition:none;cursor:grabbing}
+#guide .sizer{width:100%;height:100%;transition:scale .7s var(--spring);transform-origin:50% 92%}
+#guide.big .sizer{scale:1.65}
+#guide.dock .sizer{scale:.74}
+#guide .jelly{width:100%;height:100%;transform-origin:50% 92%;will-change:transform}
+#guide svg{width:100%;height:100%;overflow:visible;display:block}
+#guide .pupils{transition:transform .15s ease-out}
+#guide .lid{transform-origin:center;transform-box:fill-box;animation:blink 4.6s infinite}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.08)}}
+#guide .ping{position:absolute;right:16px;top:20px;width:14px;height:14px;border-radius:50%;background:var(--amber);border:2px solid var(--ink);opacity:0;transition:.3s}
+#guide.dock .ping{opacity:1;animation:pulse2 2s infinite}
+#guide.chatting .ping{opacity:0}
+@keyframes pulse2{50%{box-shadow:0 0 0 8px #ffb54700}}
+#guide .mouth-o{display:none}
+#guide.happy .mouth-w{display:none}
+#guide.happy .mouth-o{display:inline}
+
+.bubble{position:absolute;bottom:86%;left:74%;width:max-content;max-width:min(300px,68vw);padding:12px 16px;border-radius:18px 18px 18px 4px;
+  background:var(--paper);color:var(--ink);font-size:14.5px;line-height:1.55;font-weight:500;box-shadow:0 18px 40px -10px #000c;
+  opacity:0;transform:scale(.5) translateY(12px);transform-origin:0 100%;transition:.5s var(--spring);pointer-events:none}
+.bubble.show{opacity:1;transform:none}
+.bubble b{color:#0077b8}
+#guide.bubble-left .bubble{left:auto;right:70%;border-radius:18px 18px 4px 18px;transform-origin:100% 100%}
+#guide.big .bubble{bottom:155%;left:50%;transform:translateX(-50%) scale(.5);transform-origin:50% 100%;border-radius:18px;font-size:15px;text-align:center}
+#guide.big .bubble.show{transform:translateX(-50%)}
+
+/* ---------- 聊天 ---------- */
+#chat{position:fixed;z-index:85;right:16px;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));height:min(560px,calc(100svh - 170px));
+  display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:#0b1424f0;border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 30px 80px -20px #000d;transform-origin:100% 100%;transform:scale(.3);opacity:0;visibility:hidden;transition:.55s var(--spring)}
+#chat.open{transform:none;opacity:1;visibility:visible}
+.chat-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.chat-hd .mini{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9f5ff,#4fd8ff 55%,#1a7fd1);display:grid;place-items:center}
+.chat-hd .mini svg{width:26px;height:26px}
+.chat-hd b{display:block;font-size:15px}
+.chat-hd small{color:var(--jade);font-size:12px;font-family:var(--f-mono)}
+.chat-hd small.dev{color:var(--amber)}
+.dev-note{margin:12px 16px 0;padding:10px 12px;border-radius:12px;background:#ffb54714;border:1px solid #ffb5474d;color:#ffd99a;font-size:12.5px;line-height:1.6}
+.dev-note b{color:var(--amber)}
+.chat-hd button{margin-left:auto;background:none;border:0;color:var(--mute);font-size:22px;cursor:pointer;width:34px;height:34px;border-radius:50%}
+.chat-hd button:hover{background:#ffffff12;color:var(--paper)}
+#msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:86%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6;animation:msgIn .45s var(--spring);word-wrap:break-word}
+.m.bot{background:#ffffff10;border-bottom-left-radius:4px;align-self:flex-start}
+.m.me{background:var(--neon);color:var(--ink);border-bottom-right-radius:4px;align-self:flex-end;font-weight:500}
+.m a{color:var(--neon);text-decoration:underline;text-underline-offset:3px}
+@keyframes msgIn{from{opacity:0;transform:translateY(12px) scale(.9)}}
+.typing{display:flex;gap:4px;padding:14px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:ty 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes ty{50%{transform:translateY(-5px);opacity:.4}}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
+.quick button{font:inherit;font-size:12.5px;background:transparent;color:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;transition:.2s}
+.quick button:hover{border-color:var(--neon);color:var(--neon)}
+.chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.chat-in input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--paper);background:#ffffff0c;border:1px solid var(--line);border-radius:999px;padding:10px 16px;outline:none}
+.chat-in input:focus{border-color:var(--neon)}
+.chat-in button{width:42px;height:42px;border-radius:50%;border:0;background:var(--neon);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:transform .35s var(--spring)}
+.chat-in button:hover{transform:scale(1.12) rotate(-10deg)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="intro">
+<div class="city" id="city"></div>
+<div class="tint" id="tint"></div>
+<canvas id="rain"></canvas>
+<div class="grain"></div>
+<div class="spot" id="spot"></div>
+
+<div id="curtain"><div class="sign" id="sign">bobs.</div><div class="load">LOADING <b id="pct">0</b>%</div></div>
+<button id="skip" type="button">跳过导览 ↷</button>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a href="#top" class="logo">bobs<b>.</b></a>
+    <a class="lk hide-s" href="#about">关于</a>
+    <a class="lk" href="#projects">项目</a>
+    <a class="lk hide-s" href="#mongkok">旺角</a>
+    <a class="lk" href="#bili">B站</a>
+    <a class="lk" href="support.html">支持</a>
+    <a class="btn btn-pri" style="padding:8px 16px;font-size:13px" href="https://github.com/haha362636-coder" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</nav>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="neon-sign">開源造物<small>BOBS · HK NIGHT</small></div>
+    <div class="wrap hero-grid">
+      <div class="avatar pop" id="avatar">
+        <div class="av-frame">
+          <div class="ring2"></div>
+          <div class="ring"></div>
+          <div class="face"><img src="assets/bobs-avatar.png" alt="Bobs 的头像"></div>
+          <span class="sparkle" style="left:-8%;top:18%">✦</span>
+          <span class="sparkle" style="right:-4%;top:-2%;animation-delay:-1s;color:var(--neon)">✦</span>
+          <span class="tag"><i></i>在线 · 边学边造</span>
+        </div>
+        <div class="street-sign"><b>波士道</b><span>BOBS ROAD</span></div>
+      </div>
+
+      <div style="min-width:0">
+        <div class="hi pop">// hello, world. 你好呀，欢迎来玩</div>
+        <h1 class="name pop">Bobs<span class="dot">.</span></h1>
+        <div class="role pop">一个 <span class="typed" id="typed">会写代码的新手</span></div>
+        <p class="bio pop">我是一个<b>会写代码</b>的新手开发者：能自己写、自己改、自己调，但还有不少东西不太会。平时喜欢用 <b>Codex</b> 和 <b>Claude Code</b> 一起写代码，边做边学，第一个正经作品是 3D 白板笔记「纸间」。不写代码的时候，我多半在香港旺角闲逛。</p>
+        <div class="chips">
+          <span class="chip pop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/></svg>会写代码</span>
+          <span class="chip pop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg>Codex + Claude Code</span>
+          <span class="chip pop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>旺角常客</span>
+          <span class="chip pop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M8 2l3 4M16 2l-3 4"/></svg>B站 UP 主</span>
+        </div>
+        <div class="cta pop">
+          <a class="btn btn-pri mag" href="#projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>看看我的项目</a>
+          <a class="btn btn-bili mag" href="https://space.bilibili.com/3546936296606370" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M8 2l3 4M16 2l-3 4M9 12v2M15 12v2"/></svg>B站主页</a>
+        </div>
+        <div class="facts pop">
+          <div><b id="f-repos">3</b><small>公开仓库</small></div>
+          <div><b id="f-stars">6</b><small>收获 Star</small></div>
+          <div><b>v1.1.0</b><small>纸间最新版本</small></div>
+          <div><b>2026.07</b><small>加入 GitHub</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint">SCROLL<i></i></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">About me</div>
+        <h2>一个<em>新手</em>，边学边做</h2>
+      </div>
+      <div class="about-grid">
+        <div class="about-text panel rv">
+          <p>你好，我是 Bobs，一个会写代码的新手开发者。JavaScript、HTML、CSS 我都能自己动手写，也能读懂、改动别人的代码。不过说实话，还有不少东西我不太会：算法要查，复杂的报错要问，大一点的架构也还在摸索。但我很喜欢“把脑子里的想法变成能点、能用的东西”这个过程。</p>
+          <p>我写代码离不开两个搭档：<b>Codex</b> 和 <b>Claude Code</b>。我自己写核心逻辑，把想做的效果描述清楚，让 AI 帮我搭框架、补细节，然后我一行行读、一处处改。看不懂的地方就追着问“为什么这么写”，每做完一个功能，自己就多懂一点。</p>
+          <p>就这样，我做出了第一个正经作品「纸间 Paperroom」：一块黑色皮面的 3D 白板笔记，能放便签、文件夹、手绘贴纸，还能录磁带。它有网页版，也有用 Swift 打包的 Mac 版，代码全部开源。对新手来说，能把它发布出来，我自己都挺意外的。</p>
+          <p>不写代码的时候，我经常跑去香港旺角。霓虹招牌、街市、人挤人的西洋菜南街，这种热闹的街头氛围特别能给我灵感，所以这个博客的背景也选了旺角的夜街。</p>
+          <p>我会把做东西的过程发到 B站，踩过的坑、学到的东西都会记录下来。如果你也是新手，欢迎一起交流。右下角那只果冻叫「啵啵」，它目前还在开发中，还没接入真正的 AI，只能回答几个预设问题。</p>
+        </div>
+        <div class="side">
+          <div class="now panel rv">
+            <h4>最近在忙</h4>
+            <ul>
+              <li><span>NOW</span>跟着 Codex 和 Claude Code 继续打磨纸间</li>
+              <li><span>LEARN</span>补基础：JavaScript、Three.js、Git 怎么用</li>
+              <li><span>NEW</span>搭好了这个博客，背景是旺角的夜街</li>
+              <li><span>NEXT</span>把开发过程剪成视频发到 B站</li>
+            </ul>
+          </div>
+          <div class="stack-wrap panel rv">
+            <h4>我的工具箱</h4>
+            <div class="stack">
+              <div><b>Codex</b><small>AI 编程搭档</small></div>
+              <div><b>Claude Code</b><small>AI 编程搭档</small></div>
+              <div><b>Three.js</b><small>正在学的 3D 库</small></div>
+              <div><b>JavaScript</b><small>网页版的主力语言</small></div>
+              <div><b>Swift</b><small>打包 Mac 桌面版</small></div>
+              <div><b>GitHub</b><small>开源 + 发布版本</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW I CODE -->
+  <section id="howto">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">How I code</div>
+        <h2>我和 AI <em>怎么写代码</em></h2>
+        <p class="lead">我会写代码，但新手最怕的还是“不知道从哪下手”。我的办法是自己写、自己改，再把 Codex 和 Claude Code 当成耐心的老师兼搭档，按下面这个流程一点点往前推。</p>
+      </div>
+      <ol class="flow">
+        <li class="panel rv"><b>说清楚想要什么</b><p>用大白话描述效果，比如“一块黑色皮面的白板，便签可以拖来拖去”。描述越具体，第一版越靠谱。</p></li>
+        <li class="panel rv"><b>让 AI 搭第一版</b><p>Codex 和 Claude Code 帮我把项目结构和基础代码写出来，我先让它跑起来再说。</p></li>
+        <li class="panel rv"><b>跑起来，挑毛病</b><p>打开浏览器看效果，哪里不对就截图、描述给 AI，让它改。纸间的很多细节就是这样一轮轮磨出来的。</p></li>
+        <li class="panel rv"><b>不懂就追问</b><p>看不懂的代码，我会问“这一行是干嘛的”“为什么不用另一种写法”。这是我学得最快的方式。</p></li>
+        <li class="panel rv"><b>提交、发布、记录</b><p>功能稳定了就推到 GitHub、打个版本号，再把过程整理成 B站视频。</p></li>
+      </ol>
+      <div class="ai-pair">
+        <div class="panel rv"><h3>Codex</h3><p>适合把一个明确的小任务交出去，比如“给这个按钮加个动画”“把这段逻辑改成函数”，改完我再看。</p></div>
+        <div class="panel rv"><h3>Claude Code</h3><p>在终端里直接读整个项目，适合问“这个项目是怎么组织的”，或者让它一口气改好几个文件、跑测试。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MONG KOK -->
+  <section id="mongkok" class="band mk">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">Mong Kok</div>
+        <h2>常去<em>旺角</em></h2>
+        <p class="lead">旺角是全世界人口密度最高的地方之一，招牌一层叠一层，夜里比白天还亮。我经常去那里走走，下面是去旺角绝对不会错过的几条街。</p>
+      </div>
+      <div class="spots">
+        <div class="spot-card panel rv"><small>Sai Yeung Choi St S</small><b>西洋菜南街</b><p>行人专用区，晚上有街头表演，人最多也最热闹。</p></div>
+        <div class="spot-card panel rv"><small>Tung Choi St</small><b>女人街（通菜街）</b><p>一整条露天摊位，小饰品、衣服、手机壳，砍价是传统。</p></div>
+        <div class="spot-card panel rv"><small>Fa Yuen St</small><b>波鞋街（花园街）</b><p>球鞋店一家挨一家，喜欢鞋的人能逛一下午。</p></div>
+        <div class="spot-card panel rv"><small>Portland St</small><b>砵兰街</b><p>老式霓虹招牌最集中的地方之一，拍夜景很出片。</p></div>
+        <div class="spot-card panel rv"><small>Langham Place</small><b>朗豪坊</b><p>超长的通天扶梯，逛累了上去吹空调。</p></div>
+        <div class="spot-card panel rv"><small>Street food</small><b>街头小吃</b><p>鱼蛋、烧卖、鸡蛋仔、碗仔翅，边走边吃才是旺角的正确打开方式。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">Open source</div>
+        <h2>开源<em>项目</em></h2>
+        <p class="lead">挑一个最得意的放在最前面。纸间用 MIT 协议开源，欢迎来点个 Star，也欢迎提 Issue。</p>
+      </div>
+
+      <article class="proj panel rv" id="paperroom">
+        <div class="shots">
+          <img src="assets/paperroom.jpg" alt="纸间 Paperroom：黑色皮面白板上的便签和文件夹">
+          <img src="assets/paperroom-sticker.jpg" alt="纸间 Paperroom：手绘贴纸功能">
+          <span class="badge">FEATURED · v1.1.0</span>
+          <span class="hint">悬停查看贴纸 →</span>
+        </div>
+        <div class="proj-body">
+          <h3>纸间<small>Paperroom</small></h3>
+          <p>黑色皮革风格的 3D 白板笔记应用。便签、文件夹、手绘贴纸和录音磁带，都能放在一张有质感的皮面上自由摆放。</p>
+          <div class="tags"><span>Three.js</span><span>Swift</span><span>JavaScript</span><span>Web Audio</span><span>MIT</span></div>
+          <div class="star" id="pr-star">★ 4 stars on GitHub</div>
+          <div class="links">
+            <a class="btn btn-pri mag" href="https://github.com/haha362636-coder/paperroom" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0012 .5z"/></svg>GitHub</a>
+            <a class="btn btn-ghost mag" href="https://haha362636-coder.github.io/paperroom/" target="_blank" rel="noopener">▶ 在线体验</a>
+            <a class="btn btn-ghost mag" href="https://github.com/haha362636-coder/paperroom/releases/latest" target="_blank" rel="noopener">⬇ Mac 版</a>
+          </div>
+        </div>
+      </article>
+
+      <div class="feats">
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg></div><b>三维文件夹</b><p>点开皮质文件夹，纸张以真实三维浮起。超过 6 张可以翻组，关闭时轻轻回落。</p></div>
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/></svg></div><b>录音磁带</b><p>按真实尺寸 100.4 × 63.8 × 12 mm 建模，带盘以 4.76 cm/s 线速度转动，单盘最长 15 分钟。</p></div>
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></div><b>手绘贴纸</b><p>画笔可调颜色和粗细，支持撤销和导入图片。贴纸能附着在文件夹上一起拖动。</p></div>
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><path d="M17 14v6M14 17h6"/></svg></div><b>多白板工作台</b><p>顶部切换白板，＋ 新建一块。每块白板独立保存，还会记住你最后打开的那块。</p></div>
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v7"/><rect x="6" y="9" width="12" height="13" rx="2"/><circle cx="12" cy="14" r="2"/></svg></div><b>挂绳工牌</b><p>左上角的工牌有绳段约束、重力和惯性，可以用鼠标、触摸或方向键甩着玩。</p></div>
+        <div class="feat panel rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></div><b>光照与材质</b><p>物理材质加两组矩形柔光灯，皮面有微纹理和清漆高光，后期加 SSAO 接触阴影。</p></div>
+      </div>
+
+      <div class="spec">
+        <div class="panel rv">
+          <h4>项目档案</h4>
+          <dl class="kv">
+            <dt>最新版本</dt><dd>v1.1.0 · 2026-09-29</dd>
+            <dt>平台</dt><dd>网页版 · macOS 14+（Apple Silicon）</dd>
+            <dt>许可证</dt><dd>MIT License</dd>
+            <dt>依赖</dt><dd>只有一个：three</dd>
+            <dt>本地运行</dt><dd style="font-family:var(--f-mono);font-size:13px">npm install &amp;&amp; npm run dev</dd>
+          </dl>
+          <div class="changelog">
+            <div><code>v1.1.0</code><span>2026-09-29 · 新版 Mac 安装包</span></div>
+            <div><code>v1.0.0</code><span>2026-09-28 · 首个正式版，附宣传片</span></div>
+          </div>
+        </div>
+        <div class="panel rv">
+          <h4>语言构成</h4>
+          <div class="langbar">
+            <i style="width:36.2%;background:#4fd8ff"></i><i style="width:32.5%;background:#ffb547"></i><i style="width:16%;background:#6fe3b4"></i><i style="width:15.3%;background:#8f9cff"></i>
+          </div>
+          <div class="legend">
+            <span style="--c:#4fd8ff">Swift<em>36.2%</em></span>
+            <span style="--c:#ffb547">JavaScript<em>32.5%</em></span>
+            <span style="--c:#6fe3b4">Shell<em>16.0%</em></span>
+            <span style="--c:#8f9cff">Python<em>15.3%</em></span>
+          </div>
+          <div class="changelog">
+            <div><code>数据</code><span>保存在当前浏览器，输入停止 350ms 自动保存</span></div>
+            <div><code>备份</code><span>右上角 ↗ 导出 JSON，录音一起打包</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-proj">
+        <a class="mini-proj panel rv" href="https://github.com/haha362636-coder/browserpro" target="_blank" rel="noopener">
+          <h3>browserpro ↗</h3>
+          <p>free ai browser。一个免费的 AI 浏览器实验项目。</p>
+          <div class="meta"><span>● JavaScript</span><span id="bp-star">★ 2</span><span>2026-08</span></div>
+        </a>
+        <div class="mini-proj panel dashed rv">
+          <h3>下一个项目</h3>
+          <p>正在白板上打草稿。想看什么，在 B站评论区或者 GitHub Issue 告诉我，说不定就是下一个。</p>
+          <div class="meta"><span>coming soon</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section id="timeline">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">Timeline</div>
+        <h2>一路<em>走来</em></h2>
+      </div>
+      <div class="tl">
+        <div class="tl-item panel rv"><time>2026-07-11</time><b>注册 GitHub</b><p>开了 haha362636-coder 这个账号，开始把作品放到网上。</p></div>
+        <div class="tl-item panel rv"><time>2026-08-06</time><b>browserpro</b><p>公开了 JavaScript 项目 browserpro，尝试做一个免费的 AI 浏览器。</p></div>
+        <div class="tl-item panel rv"><time>2026-09-28</time><b>纸间 Paperroom 1.0.0</b><p>首个正式版发布：网页版 + Mac 安装包，还剪了一支宣传片。</p></div>
+        <div class="tl-item panel rv"><time>2026-09-29</time><b>纸间 1.1.0</b><p>第二天就发了新版，Mac 安装包附带 SHA-256 校验文件。</p></div>
+        <div class="tl-item panel rv"><time>2026-10</time><b>这个博客上线</b><p>把作品和 B站放到一起，顺便请了一只果冻导游。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BILIBILI -->
+  <section id="bili">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">Bilibili</div>
+        <h2>在 B站<em> 找到我</em></h2>
+      </div>
+      <div class="bili panel rv">
+        <div class="danmaku" id="danmaku"></div>
+        <svg class="tv" viewBox="0 0 110 94" aria-hidden="true">
+          <path d="M34 4 L46 18 M76 4 L64 18" stroke="#00a1d6" stroke-width="5" stroke-linecap="round"/>
+          <rect x="4" y="18" width="102" height="72" rx="18" fill="#00a1d6"/>
+          <rect x="14" y="28" width="82" height="52" rx="10" fill="#f2eee4"/>
+          <rect x="34" y="44" width="6" height="12" rx="3" fill="#00a1d6"/><rect x="70" y="44" width="6" height="12" rx="3" fill="#00a1d6"/>
+          <path d="M48 64 q3.5 4 7 0 q3.5 4 7 0" stroke="#00a1d6" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div style="position:relative;min-width:0">
+          <h3>Bobs 的 B站空间</h3>
+          <p>开发过程、项目演示和一些乱七八糟的想法，都在这里更新。</p>
+          <div class="bili-list"><span>开发日志</span><span>项目演示</span><span>3D 交互</span><span>折腾记录</span></div>
+          <div class="uid">UID 3546936296606370</div>
+        </div>
+        <a class="btn btn-bili mag" style="position:relative" href="https://space.bilibili.com/3546936296606370?spm_id_from=333.1007.0.0" target="_blank" rel="noopener">去关注 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="rv">
+        <div class="eyebrow">FAQ</div>
+        <h2>常见<em>问题</em></h2>
+      </div>
+      <div class="faq">
+        <details class="panel rv"><summary>你是新手，怎么做出 3D 应用的？</summary><p>我自己会写代码，再加上 Codex 和 Claude Code 帮忙。我负责想清楚要什么、写和改代码、反复试和挑毛病，AI 帮我搭框架、补我还不会的部分、解释看不懂的地方。整个过程本身就是我学习的方式。</p></details>
+        <details class="panel rv"><summary>纸间要花钱吗？</summary><p>不用。纸间是 MIT 协议的开源项目，网页版打开就能用，Mac 版也可以免费下载。</p></details>
+        <details class="panel rv"><summary>Mac 版第一次打开被系统拦住了怎么办？</summary><p>安装包是 ad-hoc 签名，没有经过 Apple 公证。到「系统设置 → 隐私与安全性」底部点「仍要打开」就行。目前只支持 Apple Silicon、macOS 14 及以上。</p></details>
+        <details class="panel rv"><summary>我的笔记会同步到云端吗？</summary><p>不会。数据只保存在你当前的浏览器或设备里，网页版和桌面版也互相独立。换设备前，用右上角 ↗ 导出 JSON 备份。</p></details>
+        <details class="panel rv"><summary>右下角的啵啵是真的 AI 吗？</summary><p>还不是。啵啵目前在开发中，还没有接入真正的 AI，只会按关键词回答几个预设问题。之后会慢慢把它变聪明。</p></details>
+        <details class="panel rv"><summary>我想支持 Bobs，怎么做？</summary><p>可以去 <a href="support.html">支持页面</a>，那里有赞助入口。给纸间点 Star、去 B站一键三连，也一样是支持。</p></details>
+        <details class="panel rv"><summary>怎么联系 Bobs？</summary><p>可以去 <a href="https://space.bilibili.com/3546936296606370" target="_blank" rel="noopener">B站</a> 私信，或者在 <a href="https://github.com/haha362636-coder/paperroom/issues" target="_blank" rel="noopener">GitHub Issue</a> 留言。</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="end">
+  <p class="end">The End.</p>
+  <p class="end-cn">你已经逛到尽头啦，谢谢来玩</p>
+  <div class="foot-links">
+    <a class="btn btn-ghost mag" href="https://github.com/haha362636-coder" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn btn-ghost mag" href="https://space.bilibili.com/3546936296606370" target="_blank" rel="noopener">Bilibili</a>
+    <a class="btn btn-ghost mag" href="support.html">♥ 支持我</a>
+    <button class="btn btn-ghost mag" type="button" id="replay">↺ 再导览一次</button>
+  </div>
+  <p class="credits">
+    背景：<a href="https://commons.wikimedia.org/wiki/File:Hong_Kong_(Unsplash_cGUbzDqLCyg).jpg" target="_blank" rel="noopener">Hong Kong</a> by Annie Spratt（CC0，已提亮）·
+    <a href="https://commons.wikimedia.org/wiki/File:Mong_Kok_Neon_Signs_Night_(48127904386).jpg" target="_blank" rel="noopener">Mong Kok Neon Signs Night</a> by Benh LIEU SONG（CC BY-SA 2.0，已调色）
+  </p>
+  <p class="copy">© 2026 Bobs · Made with ♥ and a jelly robot</p>
+</footer>
+
+<!-- 果冻导游 啵啵 -->
+<div id="guide" role="button" tabindex="0" aria-label="AI 小导游啵啵，点击提问">
+  <div class="sizer"><div class="jelly" id="jelly">
+    <svg viewBox="0 0 120 120">
+      <defs>
+        <radialGradient id="jBody" cx="40%" cy="30%" r="75%">
+          <stop offset="0" stop-color="#e6fbff"/><stop offset=".35" stop-color="#8fe6ff"/><stop offset=".75" stop-color="#3fb4f0"/><stop offset="1" stop-color="#1f74c9"/>
+        </radialGradient>
+        <radialGradient id="jInner" cx="50%" cy="80%" r="60%"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+        <radialGradient id="jOrb"><stop offset="0" stop-color="#fff6d8"/><stop offset=".5" stop-color="#ffb547"/><stop offset="1" stop-color="#ffb547" stop-opacity="0"/></radialGradient>
+        <linearGradient id="jEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2a4a"/><stop offset="1" stop-color="#1c4f86"/></linearGradient>
+      </defs>
+      <ellipse id="shadow" cx="60" cy="113" rx="30" ry="5" fill="#000" opacity=".4" style="transform-origin:60px 113px"/>
+      <g id="antenna" style="transform-origin:60px 30px">
+        <path d="M60 30 Q57 18 63 10" stroke="#6cc9f3" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <circle cx="63" cy="9" r="11" fill="url(#jOrb)" opacity=".8"/>
+        <circle cx="63" cy="9" r="4.5" fill="#ffd27a"/>
+        <circle cx="61.6" cy="7.6" r="1.6" fill="#fff"/>
+      </g>
+      <ellipse cx="17" cy="82" rx="8" ry="6" fill="#3fb4f0" transform="rotate(-25 17 82)"/>
+      <g id="armR" style="transform-origin:96px 78px"><ellipse cx="103" cy="80" rx="8" ry="6" fill="#3fb4f0" transform="rotate(25 103 80)"/></g>
+      <path d="M60 28 C88 28 106 50 106 78 C106 100 88 110 60 110 C32 110 14 100 14 78 C14 50 32 28 60 28 Z" fill="url(#jBody)"/>
+      <path d="M60 28 C88 28 106 50 106 78 C106 100 88 110 60 110 C32 110 14 100 14 78 C14 50 32 28 60 28 Z" fill="url(#jInner)"/>
+      <path d="M22 92 C30 104 46 108 60 108 C74 108 90 104 98 92" stroke="#ffffff" stroke-opacity=".35" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="38" cy="46" rx="13" ry="8" fill="#fff" opacity=".85" transform="rotate(-30 38 46)"/>
+      <circle cx="54" cy="38" r="3" fill="#fff" opacity=".85"/>
+      <circle cx="92" cy="62" r="2" fill="#fff" opacity=".6"/>
+      <g>
+        <g class="lid"><ellipse cx="45" cy="72" rx="8.5" ry="10" fill="url(#jEye)"/></g>
+        <g class="lid"><ellipse cx="75" cy="72" rx="8.5" ry="10" fill="url(#jEye)"/></g>
+        <g class="pupils" id="pupils">
+          <circle cx="47.5" cy="68.5" r="3.6" fill="#fff"/><circle cx="42.5" cy="76" r="1.6" fill="#bff3ff"/>
+          <circle cx="77.5" cy="68.5" r="3.6" fill="#fff"/><circle cx="72.5" cy="76" r="1.6" fill="#bff3ff"/>
+        </g>
+        <ellipse cx="32" cy="86" rx="6.5" ry="3.6" fill="#ffb547" opacity=".55"/>
+        <ellipse cx="88" cy="86" rx="6.5" ry="3.6" fill="#ffb547" opacity=".55"/>
+        <path class="mouth-w" d="M54 85 q3 3.6 6 0 q3 3.6 6 0" stroke="#0d2a4a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path class="mouth-o" d="M54.5 84 q5.5 9 11 0 z" fill="#0d2a4a"/>
+      </g>
+    </svg>
+  </div></div>
+  <span class="ping"></span>
+  <div class="bubble" id="bubble"></div>
+</div>
+
+<div id="chat" role="dialog" aria-label="和啵啵聊天">
+  <div class="chat-hd">
+    <div class="mini"><svg viewBox="0 0 30 24"><ellipse cx="9" cy="12" rx="4" ry="5" fill="#0d2a4a"/><ellipse cx="21" cy="12" rx="4" ry="5" fill="#0d2a4a"/><circle cx="10" cy="10" r="1.6" fill="#fff"/><circle cx="22" cy="10" r="1.6" fill="#fff"/></svg></div>
+    <div><b>啵啵 · 果冻导游</b><small class="dev">● 开发中 · 尚未接入 AI</small></div>
+    <button type="button" id="closeChat" aria-label="关闭">×</button>
+  </div>
+  <div class="dev-note">🚧 啵啵还在开发中，<b>还没有接入真正的 AI</b>。现在只能按关键词回答几个预设问题，问不到的请多包涵。</div>
+  <div id="msgs"></div>
+  <div class="quick" id="quick">
+    <button type="button">Bobs 是谁？</button>
+    <button type="button">纸间是什么？</button>
+    <button type="button">用什么写代码？</button>
+    <button type="button">旺角有什么好玩？</button>
+    <button type="button">B站在哪？</button>
+    <button type="button">怎么支持 Bobs？</button>
+    <button type="button">再导览一次</button>
+  </div>
+  <form class="chat-in" id="chatForm">
+    <input id="chatInput" autocomplete="off" placeholder="问啵啵点什么吧…" maxlength="200">
+    <button type="submit" aria-label="发送"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </form>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 200) : ms));
+
+/* ---------- 夜雨 + 视差 ---------- */
+(() => {
+  const c = $('#rain'), x = c.getContext('2d'); let drops = [], w, h; const d = devicePixelRatio || 1;
+  const size = () => { w = c.width = innerWidth * d; h = c.height = innerHeight * d;
+    drops = Array.from({length: Math.round(innerWidth / 9)}, () => ({x: Math.random()*w, y: Math.random()*h, l: (Math.random()*14+8)*d, v: (Math.random()*6+9)*d, a: Math.random()*.25+.08})); };
+  size(); addEventListener('resize', size);
+  (function f(){ x.clearRect(0,0,w,h); x.lineWidth = d;
+    for (const p of drops){ x.strokeStyle = `rgba(190,230,255,${p.a})`; x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x - p.l*.18, p.y + p.l); x.stroke();
+      p.y += p.v; p.x -= p.v*.18; if (p.y > h) { p.y = -p.l; p.x = Math.random()*w*1.1; } }
+    if (!reduce) requestAnimationFrame(f); })();
+  const city = $('#city'), tint = $('#tint');
+  const onScroll = () => { const y = scrollY;
+    city.style.transform = `scale(1.08) translateY(${-Math.min(y, 3000)*.03}px)`;
+    tint.style.opacity = Math.min(.32, y / innerHeight * .32); };
+  addEventListener('scroll', onScroll, {passive: true}); onScroll();
+})();
+
+/* ---------- 光斑 / 磁吸 / 倾斜 ---------- */
+const spot = $('#spot');
+addEventListener('pointermove', e => { spot.style.left = e.clientX + 'px'; spot.style.top = e.clientY + 'px'; });
+$$('.mag').forEach(b => {
+  b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect();
+    b.style.transform = `translate(${(e.clientX - r.left - r.width/2)*.25}px,${(e.clientY - r.top - r.height/2)*.35}px)`; });
+  b.addEventListener('pointerleave', () => b.style.transform = '');
+});
+const proj = $('#paperroom');
+proj.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const r = proj.getBoundingClientRect();
+  const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+  proj.style.transform = `perspective(1200px) rotateY(${(px-.5)*5}deg) rotateX(${(.5-py)*5}deg)`;
+  proj.style.setProperty('--mx', px*100 + '%'); proj.style.setProperty('--my', py*100 + '%'); });
+proj.addEventListener('pointerleave', () => proj.style.transform = '');
+
+/* ---------- 打字机 ---------- */
+(async () => { const words = ['会写代码的新手', 'AI 编程玩家', '旺角常客', 'B站 UP 主', '开源新人'], el = $('#typed'); let i = 0;
+  while (true) { await sleep(2200); const w = words[++i % words.length];
+    while (el.textContent.length) { el.textContent = el.textContent.slice(0, -1); await sleep(60); }
+    for (const ch of w) { el.textContent += ch; await sleep(110); } } })();
+
+/* ---------- 弹幕 ---------- */
+['前排！', '纸间太好看了', '皮面质感绝了', '已三连', '求更新', '磁带好可爱', 'Three.js 大佬', '旺角夜景好出片'].forEach((t, i) => {
+  const s = document.createElement('span'); s.textContent = t; s.style.top = (6 + (i*13) % 84) + '%';
+  s.style.animationDuration = (12 + i*2) + 's'; s.style.animationDelay = (-i*3) + 's'; $('#danmaku').appendChild(s); });
+
+/* ---------- GitHub 实时数据（失败就保留默认值） ---------- */
+fetch('https://api.github.com/users/haha362636-coder/repos?per_page=100').then(r => r.ok ? r.json() : null).then(list => {
+  if (!Array.isArray(list)) return;
+  const own = list.filter(r => !r.fork), stars = own.reduce((s, r) => s + r.stargazers_count, 0);
+  $('#f-repos').textContent = own.length; $('#f-stars').textContent = stars;
+  const pr = own.find(r => r.name === 'paperroom'), bp = own.find(r => r.name === 'browserpro');
+  if (pr) $('#pr-star').textContent = `★ ${pr.stargazers_count} stars on GitHub`;
+  if (bp) $('#bp-star').textContent = `★ ${bp.stargazers_count}`;
+}).catch(() => {});
+
+/* ---------- 滚动渐显 ---------- */
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('seen')), {threshold: .1});
+$$('.rv').forEach(el => io.observe(el));
+
+/* =========================================================
+   果冻物理：弹簧驱动的挤压/拉伸（QQ 弹弹的关键）
+   ========================================================= */
+const guide = $('#guide'), jelly = $('#jelly'), bubble = $('#bubble'), shadow = $('#shadow'), antenna = $('#antenna'), armR = $('#armR'), pupils = $('#pupils');
+const J = { sq: 0, vsq: 0, rot: 0, vrot: 0, ant: 0, vant: 0, y: 0, hopT: -1, hopping: false, nextHop: 0, last: performance.now() };
+function poke(squash, spin = 0){ J.vsq += squash; J.vrot += spin; J.vant += (spin || squash) * 3; }
+(function physics(now){
+  const dt = Math.min(.033, (now - J.last) / 1000); J.last = now; const t = now / 1000;
+  // 弹簧：刚度高、阻尼低，抖得久一点才像果冻
+  J.vsq += (-260 * J.sq - 7 * J.vsq) * dt; J.sq += J.vsq * dt;
+  J.vrot += (-160 * J.rot - 6 * J.vrot) * dt; J.rot += J.vrot * dt;
+  J.vant += (-90 * J.ant - 3 * J.vant) * dt; J.ant += J.vant * dt;
+  if (J.hopping && J.hopT < 0 && now > J.nextHop) { J.hopT = 0; poke(-2.2); }
+  if (J.hopT >= 0) {
+    J.hopT += dt / .5;
+    J.y = -34 * 4 * J.hopT * (1 - J.hopT);
+    if (J.hopT >= 1) { J.hopT = -1; J.y = 0; poke(3.4, (Math.random() - .5) * 2); J.nextHop = now + 140; }
+  }
+  const s = Math.max(-.35, Math.min(.35, J.sq + (reduce ? 0 : Math.sin(t * 2.4) * .025)));   // s>0 压扁，s<0 拉长
+  jelly.style.transform = `translateY(${J.y}px) rotate(${J.rot * 8}deg) scale(${1 + s * .9},${1 - s})`;
+  const lift = Math.min(1, -J.y / 40);
+  shadow.style.transform = `scale(${1 - lift * .45 + s * .3},1)`; shadow.style.opacity = .4 - lift * .25;
+  antenna.style.transform = `rotate(${J.ant * 18 + Math.sin(t * 2) * 4}deg)`;
+  armR.style.transform = `rotate(${Math.sin(t * 6) * (guide.classList.contains('waving') ? 24 : 4)}deg)`;
+  requestAnimationFrame(physics);
+})(performance.now());
+
+addEventListener('pointermove', e => { const r = jelly.getBoundingClientRect();
+  const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2), d = Math.hypot(dx, dy) || 1;
+  pupils.style.transform = `translate(${dx/d*2.6}px,${dy/d*2.6}px)`; });
+
+/* ---------- 导游位置 ---------- */
+let gx = 0, gy = 0, mode = 'center';
+function place(x, y){ const dx = x - gx; gx = x; gy = y; guide.style.transform = `translate(${x}px,${y}px)`; if (Math.abs(dx) > 30) poke(-1.4, Math.sign(dx) * -3); }
+function spotFor(m){ const W = innerWidth, H = innerHeight, s = 120;
+  if (m === 'center') return [W/2 - s/2, H/2 - s/2 + 40];
+  if (m === 'tour')   return W < 700 ? [6, H - s - 26] : [Math.max(16, W*.04), H - s - 50];
+  return [W - s + 4, H - s + 6]; }
+function go(m){ mode = m; const [x, y] = spotFor(m); place(x, y);
+  guide.classList.toggle('big', m === 'center'); guide.classList.toggle('dock', m === 'dock'); guide.classList.toggle('bubble-left', m === 'dock'); }
+addEventListener('resize', () => go(mode));
+
+let bubbleTimer;
+function say(html, hold){ clearTimeout(bubbleTimer); bubble.classList.remove('show'); guide.classList.add('happy'); poke(1.6);
+  setTimeout(() => guide.classList.remove('happy'), 700);
+  return new Promise(r => setTimeout(() => { bubble.innerHTML = html; bubble.classList.add('show');
+    if (hold) bubbleTimer = setTimeout(() => bubble.classList.remove('show'), hold); r(); }, 170)); }
+const hop = on => { J.hopping = on; };
+
+function easeInOut(t){ return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
+function scrollToY(y, dur = 1400){
+  y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
+  if (reduce) { scrollTo(0, y); return Promise.resolve(); }
+  const from = scrollY, t0 = performance.now();
+  return new Promise(res => { (function f(now){ const t = Math.min(1, (now - t0)/dur);
+    scrollTo(0, from + (y - from)*easeInOut(t)); t < 1 ? requestAnimationFrame(f) : res(); })(t0); });
+}
+const topOf = sel => $(sel).getBoundingClientRect().top + scrollY - 80;
+
+/* ---------- 导览 ---------- */
+let touring = false, skipped = false;
+const block = e => { if (touring) e.preventDefault(); };
+addEventListener('wheel', block, {passive: false});
+addEventListener('touchmove', block, {passive: false});
+addEventListener('keydown', e => { if (touring && ['ArrowDown','ArrowUp','PageDown','PageUp',' ','Home','End'].includes(e.key)) e.preventDefault(); });
+async function step(fn){ if (skipped) throw 'skip'; await fn(); if (skipped) throw 'skip'; }
+
+async function dropIn(){
+  // 从天上掉下来，落地 duang 一下
+  const [x, y] = spotFor('center'); guide.style.transition = 'none'; gx = x; place(x, -260); guide.style.opacity = 1;
+  void guide.offsetWidth; guide.style.transition = 'transform .55s cubic-bezier(.55,0,1,.45)'; place(x, y); J.vsq = -2;
+  await sleep(560); guide.style.transition = ''; poke(6); }
+
+async function tour(first){
+  touring = true; skipped = false; $('#skip').hidden = false; closeChat(); hop(false);
+  try {
+    if (first) {
+      const pct = $('#pct'), sign = $('#sign');
+      for (let i = 0; i <= 100; i += 4) { pct.textContent = i; if ([20, 28, 44, 52].includes(i)) sign.classList.toggle('on'); await sleep(22); }
+      sign.classList.add('on');
+      go('center'); await step(dropIn);
+      guide.classList.add('waving');
+      await step(() => say('哈喽～我是 <b>啵啵</b>！<br>Bobs 的果冻小导游（AI 功能开发中）✦'));
+      await step(() => sleep(1800));
+      $('#curtain').classList.add('gone');
+      await step(() => say('欢迎来到<b>香港旺角</b>的夜里～')); await step(() => sleep(1500));
+    } else {
+      await scrollToY(0, 700); go('center'); poke(3);
+      await step(() => say('好嘞，再带你逛一圈！')); await step(() => sleep(1200));
+    }
+    guide.classList.remove('waving');
+    go('tour');   // 先让开位置，别挡住头像
+    await step(() => say('先看主角！噔噔～')); await step(() => sleep(900));
+    $('#avatar').classList.add('in'); poke(2.5); await step(() => sleep(900));
+    await step(() => say('这位就是 <b>Bobs</b> 啦 (｡•̀ᴗ-)✧'));
+    for (const el of $$('.hero .pop:not(.avatar)')) { el.classList.add('in'); poke(.9); await step(() => sleep(200)); }
+    await step(() => sleep(1100));
+    hop(true);
+    await step(() => say('跟我来，蹦蹦跳跳往下逛～')); await step(() => sleep(1100));
+
+    await step(() => scrollToY(topOf('#about'))); hop(false);
+    await step(() => say('Bobs <b>会写代码</b>，是个新手开发者，<br>边学边做，一点点变厉害！')); await step(() => sleep(2400));
+
+    hop(true); await step(() => scrollToY(topOf('#howto'))); hop(false);
+    await step(() => say('Bobs 写代码的秘密武器：<br><b>Codex</b> 和 <b>Claude Code</b>！')); await step(() => sleep(2400));
+
+    hop(true); await step(() => scrollToY(topOf('#projects'))); hop(false);
+    await step(() => say('这是开源项目 <b>纸间 Paperroom</b>，<br>一块 3D 皮面白板！')); await step(() => sleep(2000));
+    hop(true); await step(() => scrollToY(topOf('.feats') - 40, 1000)); hop(false);
+    await step(() => say('能录<b>磁带</b>、画贴纸、开多块白板，<br>去 GitHub 点个 Star 吧 ⭐')); await step(() => sleep(2400));
+
+    hop(true); await step(() => scrollToY(topOf('#timeline'))); hop(false);
+    await step(() => say('这是 Bobs 一路走来的<b>足迹</b>～')); await step(() => sleep(1900));
+
+    hop(true); await step(() => scrollToY(topOf('#mongkok'))); hop(false);
+    await step(() => say('Bobs 经常去<b>旺角</b>玩，<br>这几条街都很好逛哦～')); await step(() => sleep(2400));
+
+    hop(true); await step(() => scrollToY(topOf('#bili'))); hop(false);
+    await step(() => say('B站也有 Bobs 哦，<br>记得<b>一键三连</b>！')); await step(() => sleep(2200));
+
+    hop(true); await step(() => scrollToY(document.documentElement.scrollHeight, 1400)); hop(false);
+    await step(() => say('到尽头啦！<br>抓紧，<b>弹回去</b>咯～')); poke(4); await step(() => sleep(1500));
+
+    hop(true); await step(() => scrollToY(0, 950));
+    const m = $('#main'); m.classList.remove('bounce-top'); void m.offsetWidth; m.classList.add('bounce-top'); poke(5);
+    hop(false);
+  } catch (e) { if (e !== 'skip') console.error(e); }
+  finish();
+}
+function finish(){
+  touring = false; hop(false); $('#skip').hidden = true; guide.classList.remove('waving');
+  $('#curtain').classList.add('gone'); guide.style.opacity = 1;
+  $$('.pop').forEach(el => el.classList.add('in')); document.body.classList.remove('intro');
+  go('dock'); setTimeout(() => poke(4), 800);
+  setTimeout(() => say('有问题可以<b>戳我</b>～<br>不过我还在开发中，暂时没接入 AI 哦', 5200), 1000);
+}
+$('#skip').onclick = () => { skipped = true; scrollTo(0, 0); };
+$('#replay').onclick = () => tour(false);
+
+/* ---------- 戳、拖（拖完会弹回角落） ---------- */
+let drag = null;
+guide.addEventListener('pointerenter', () => { if (!touring) poke(1.2); });
+guide.addEventListener('pointerdown', e => { if (touring) return; drag = {sx: e.clientX, sy: e.clientY, ox: gx, oy: gy, moved: false}; guide.setPointerCapture(e.pointerId); });
+guide.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) > 6) { drag.moved = true; guide.classList.add('dragging'); bubble.classList.remove('show'); }
+  if (drag.moved) { gx = drag.ox + dx; gy = drag.oy + dy; guide.style.transform = `translate(${gx}px,${gy}px)`; J.vrot += e.movementX * .08; J.vsq += e.movementY * -.04; } });
+guide.addEventListener('pointerup', () => { if (!drag) return; const moved = drag.moved; drag = null; guide.classList.remove('dragging');
+  if (moved) { go('dock'); setTimeout(() => poke(4.5), 650); say('咻——我又弹回来啦！', 2200); }
+  else { poke(4.2, (Math.random() - .5) * 3); chat.classList.contains('open') ? closeChat() : openChat(); } });
+guide.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(4); chat.classList.contains('open') ? closeChat() : openChat(); } });
+
+/* ---------- 聊天 ---------- */
+const chat = $('#chat'), msgs = $('#msgs');
+let greeted = false;
+function openChat(){ chat.classList.add('open'); guide.classList.add('chatting'); bubble.classList.remove('show');
+  if (!greeted) { greeted = true; botSay('嗨！我是啵啵 ✦ 先说明一下：我还在开发中，<b>还没接入真正的 AI</b>，只会回答几个准备好的问题。关于 Bobs、纸间、旺角和 B站，可以试试点下面的按钮问我～'); }
+  setTimeout(() => $('#chatInput').focus(), 300); }
+function closeChat(){ chat.classList.remove('open'); guide.classList.remove('chatting'); }
+$('#closeChat').onclick = closeChat;
+function add(html, who){ const d = document.createElement('div'); d.className = 'm ' + who; d.innerHTML = html; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d; }
+function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function botSay(html){ const t = add('<span class="typing"><i></i><i></i><i></i></span>', 'bot'); t.style.padding = 0;
+  await sleep(450 + Math.min(1100, html.length * 10)); t.style.padding = ''; t.innerHTML = html; msgs.scrollTop = msgs.scrollHeight; poke(1.5); }
+
+const GH = 'https://github.com/haha362636-coder/paperroom', BILI = 'https://space.bilibili.com/3546936296606370';
+const KB = [
+  [/再导览|导览|再逛|带我逛|tour/i, () => { setTimeout(() => tour(false), 900); return '好嘞！抓稳了，我们出发～'; }],
+  [/支持|赞助|打赏|请.*喝|充电|爱发电/i, '谢谢你想支持 Bobs！可以去 <a href="support.html">支持页面</a> 看看，那里有赞助入口。不赞助也完全没关系，给纸间点个 Star、去 B站三连，同样是很大的鼓励～'],
+  [/codex|claude|ai.*(编程|写代码)|怎么写代码|用什么写/i, 'Bobs 写代码主要靠 <b>Codex</b> 和 <b>Claude Code</b>：先用大白话描述想要的效果，让 AI 搭出第一版，再一边跑一边改，看不懂就追问。纸间就是这样一轮轮做出来的。'],
+  [/mac|下载|桌面|安装|dmg/i, `Mac 版到 <a href="${GH}/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 <b>Paperroom-1.1.0-mac-arm64.dmg</b>，支持 Apple Silicon、macOS 14 以上。第一次打开被拦的话，去「系统设置 → 隐私与安全性」点「仍要打开」。`],
+  [/磁带|录音|cassette/i, '纸间里可以对着麦克风录一盘磁带贴到白板上。磁带按真实尺寸 100.4 × 63.8 × 12 mm 建模，播放时带盘按 4.76 cm/s 转动，空盘转得比满盘快。单盘最长 15 分钟，每块白板最多 40 盘。'],
+  [/贴纸|手绘|画/i, '纸间的手绘贴纸可以调画笔颜色和粗细，支持撤销、清空和导入本机图片，还能贴在文件夹上一起拖着走。'],
+  [/browserpro|浏览器/i, `<b>browserpro</b> 是 Bobs 在 2026 年 8 月公开的 JavaScript 项目，简介是 free ai browser。<a href="https://github.com/haha362636-coder/browserpro" target="_blank" rel="noopener">去看看</a>`],
+  [/版本|更新|release|1\.1|changelog/i, '纸间目前最新是 <b>v1.1.0</b>（2026-09-29），前一天刚发了首个正式版 v1.0.0，还附了一支宣传片。'],
+  [/同步|备份|数据|隐私|云/i, '纸间的数据只存在你当前的浏览器或设备里，不会上传，也不跨设备同步。换设备前用右上角 ↗ 导出 JSON 备份，录音也会一起打包。'],
+  [/纸间|paperroom|项目|作品|开源/i, `<b>纸间 Paperroom</b> 是 Bobs 的开源项目：黑色皮革风格的 3D 白板笔记应用，用 Three.js 做的，MIT 协议。便签、文件夹、手绘贴纸、录音磁带都能放上去。<br><a href="${GH}" target="_blank" rel="noopener">GitHub 仓库</a> · <a href="https://haha362636-coder.github.io/paperroom/" target="_blank" rel="noopener">在线体验</a>`],
+  [/b站|bilibili|哔哩|视频|up|关注|三连/i, `Bobs 的 B站空间在这里 👉 <a href="${BILI}" target="_blank" rel="noopener">space.bilibili.com/3546936296606370</a>，记得关注三连～`],
+  [/github|代码|仓库|star/i, `Bobs 的 GitHub 是 <a href="https://github.com/haha362636-coder" target="_blank" rel="noopener">haha362636-coder</a>，给纸间点个 Star，Bobs 会很开心！`],
+  [/技术|会什么|栈|three|swift|技能|工具/i, 'Bobs 会写代码，JavaScript、HTML、CSS 都能自己动手，同时还在继续学习，搭档是 Codex 和 Claude Code。纸间用到了 Three.js 做 3D、JavaScript 写网页版、Swift 打包 Mac 版，这些都是边做边学的。'],
+  [/新手|小白|入门|学习|会不会|厉害/i, 'Bobs 是个会写代码的新手开发者，能自己写、自己改，但还有不少东西在学。靠着自己的代码功底、AI 搭档和不停地试，已经把纸间做出来并开源了。如果你也是新手，欢迎去 B站一起交流！'],
+  [/旺角|香港|好玩|逛|小吃|mong ?kok/i, 'Bobs 经常去香港旺角玩！推荐西洋菜南街、女人街（通菜街）、波鞋街（花园街）、砵兰街的霓虹招牌，还有鱼蛋、鸡蛋仔这些街头小吃。博客背景就是香港的夜街。'],
+  [/背景|照片|图片/i, '背景是香港的夜街，照片来自 Wikimedia Commons 的开放授权图片，我把它提亮了一点。下雨的效果是我自己加的 ☔'],
+  [/头像/i, '头像是 Bobs 自己的 B站头像，蓝头发、举着双手打招呼，可爱吧～'],
+  [/联系|合作|邮箱|私信/i, `想联系 Bobs，可以去 <a href="${BILI}" target="_blank" rel="noopener">B站</a> 私信，或者在 <a href="${GH}/issues" target="_blank" rel="noopener">GitHub Issue</a> 留言。`],
+  [/bobs|是谁|主人|博主|介绍/i, 'Bobs 是一个会写代码的新手开发者，也是 B站 UP 主。喜欢用 Codex 和 Claude Code 写代码，代表作是开源的 3D 白板笔记应用「纸间 Paperroom」。不写代码的时候经常去香港旺角玩。'],
+  [/你叫|啵啵|名字|你是|ai|人工智能|真的/i, '我是啵啵，一只果冻做的小导游！我还在开发中，<b>没有接入真正的 AI</b>，现在是按关键词挑预设好的回答。戳我会抖，拖我会弹回来 ✦'],
+  [/你好|hi|hello|嗨|在吗/i, '你好呀～今天想了解点什么？'],
+  [/谢谢|thx|thank|爱你|可爱/i, '嘿嘿，被夸得抖起来了～ 不客气！'],
+];
+function answer(q){ for (const [re, a] of KB) if (re.test(q)) return typeof a === 'function' ? a() : a;
+  return '这个问题我答不上来 qwq 我还在开发中，没有接入真正的 AI，只认识几个关键词：Bobs、纸间、browserpro、Codex、旺角、B站、支持。等 Bobs 把 AI 接上，我就能回答更多啦！'; }
+function ask(q){ q = q.trim(); if (!q) return; add(esc(q), 'me'); botSay(answer(q)); }
+$('#chatForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#chatInput'); ask(i.value); i.value = ''; });
+$('#quick').addEventListener('click', e => { if (e.target.tagName === 'BUTTON') ask(e.target.textContent); });
+
+/* ---------- 启动 ---------- */
+guide.style.opacity = 0;
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+scrollTo(0, 0);
+Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise(r => setTimeout(r, 1500))]).then(() => tour(true));
+</script>
+</body>
+</html>

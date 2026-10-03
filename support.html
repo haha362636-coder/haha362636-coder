@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>支持 Bobs</title>
+<meta name="description" content="Bobs 做的东西都是免费的。如果它们帮到了你，可以请 Bobs 喝一杯。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 和主页同一条旺角夜街，单栏窄版；一个主按钮跳到正式的赞助页 */
+:root{
+  color-scheme: dark;
+  --ink:#08101c; --glass:#0c1626c4; --line:#ffffff1c;
+  --paper:#f2eee4; --mute:#9fb0c4;
+  --neon:#4fd8ff; --amber:#ffb547; --jade:#6fe3b4; --bili:#00a1d6;
+  --f-display:"Instrument Serif", Georgia, serif;
+  --f-hk:"Noto Serif TC", "Songti TC", "Noto Serif SC", serif;
+  --f-body:"Noto Sans SC", -apple-system, "PingFang SC", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--ink);color:var(--paper);font-family:var(--f-body);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
+.city{position:fixed;inset:0;z-index:0;background:url("assets/hk-street.jpg") center 30%/cover no-repeat}
+.city::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#08101c66 0%,#08101cb0 40%,#08101cee 100%)}
+#rain{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+.top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) clamp(16px,5vw,48px) 0}
+.logo{font-family:var(--f-display);font-size:28px;font-style:italic;line-height:1}
+.logo b{color:var(--neon);font-style:normal}
+.back{font-size:14px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:#0a1322b3;backdrop-filter:blur(10px);transition:.25s}
+.back:hover{color:var(--paper);border-color:#4fd8ff66}
+
+main{position:relative;z-index:2;flex:1;width:100%;max-width:800px;margin:0 auto;padding:clamp(40px,7vw,80px) 16px 80px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;color:var(--neon);display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.eyebrow::before{content:"";width:28px;height:1px;background:currentColor;opacity:.6}
+h1{font-family:var(--f-hk);font-weight:900;font-size:clamp(36px,6.4vw,62px);line-height:1.15;margin:16px 0 18px;text-wrap:balance;text-shadow:0 2px 18px #08101c}
+h1 em{font-family:var(--f-display);font-weight:400;color:var(--amber)}
+.intro{color:#cfd8e3;max-width:58ch;margin:0;font-size:16.5px;text-shadow:0 2px 12px #08101c}
+
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:30px;align-items:center}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.mascot{display:none}}
+.mascot{width:150px;height:150px;animation:float 3.2s ease-in-out infinite}
+.mascot svg{width:100%;height:100%;overflow:visible}
+.mascot .lid{transform-origin:center;transform-box:fill-box;animation:blink 4.6s infinite}
+@keyframes float{0%,100%{transform:translateY(0) scale(1,1)}45%{transform:translateY(-12px) scale(.96,1.05)}55%{transform:translateY(-12px)}90%{transform:translateY(0) scale(1.07,.93)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.08)}}
+
+h2{margin:56px 0 18px;font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--neon);font-weight:500}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2)}
+
+.uses{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:700px){.uses{grid-template-columns:1fr}}
+.uses li{padding:22px 20px;transition:transform .45s var(--spring)}
+.uses li:hover{transform:translateY(-5px)}
+.uses b{display:block;font-size:16px;color:var(--amber);margin-bottom:6px}
+.uses span{font-size:13.5px;color:var(--mute);line-height:1.7;display:block}
+
+.main-way{padding:clamp(24px,4vw,36px)}
+.way-title{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 8px}
+.way-title b{font-size:20px}
+.badge{font-family:var(--f-mono);font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid #ffb54766;color:var(--amber)}
+.main-way p{margin:0 0 22px;color:#cfd8e3;font-size:14.5px;max-width:58ch}
+.cta{display:inline-flex;align-items:center;gap:14px;padding:15px 28px;border-radius:999px;background:var(--amber);color:#1d1406;font-weight:700;font-size:16px;transition:transform .35s var(--spring),box-shadow .3s}
+.cta:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 14px 40px -10px #ffb547cc}
+.cta span{font-weight:400;font-size:19px}
+.url{display:block;margin-top:14px;font-family:var(--f-mono);font-size:12px;color:var(--mute);word-break:break-all}
+
+.free{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.free{grid-template-columns:1fr}}
+.free a{padding:20px 22px;display:flex;gap:14px;align-items:flex-start;transition:transform .45s var(--spring),border-color .3s}
+.free a:hover{transform:translateY(-5px);border-color:#4fd8ff66}
+.free .ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#4fd8ff18;color:var(--neon)}
+.free .ic svg{width:21px;height:21px}
+.free b{display:block;font-size:15.5px;margin-bottom:2px}
+.free small{color:var(--mute);font-size:13px;line-height:1.6;display:block}
+
+.note{margin-top:44px;padding:22px 24px;border-radius:18px;border:1px solid #ffffff14;background:#08101ca6}
+.note p{margin:0;font-size:14px;color:var(--mute)}
+.note p+p{margin-top:8px}
+.note strong{color:var(--paper)}
+
+footer{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding:22px clamp(16px,5vw,48px) calc(22px + env(safe-area-inset-bottom,0px));font-size:12px;color:#7d8da0;border-top:1px solid #ffffff12;background:#08101ccc}
+footer a{text-decoration:underline;text-underline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="city"></div>
+<canvas id="rain"></canvas>
+
+<header class="top">
+  <a class="logo" href="index.html">bobs<b>.</b></a>
+  <a class="back" href="index.html">← 回到主页</a>
+</header>
+
+<main>
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Support / 支持 Bobs</div>
+      <h1>喜欢我做的东西，<br><em>就请我喝一杯吧</em></h1>
+      <p class="intro">纸间是免费的，没有广告，也没有会员。我是个会写代码的新手开发者，一个人在做，写代码时用的 AI 服务、域名和服务器，都是自己掏钱。如果它帮到了你，你的支持能让我继续做下去。</p>
+    </div>
+    <div class="mascot" aria-hidden="true">
+      <svg viewBox="0 0 120 120">
+        <defs>
+          <radialGradient id="jBody" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#e6fbff"/><stop offset=".35" stop-color="#8fe6ff"/><stop offset=".75" stop-color="#3fb4f0"/><stop offset="1" stop-color="#1f74c9"/></radialGradient>
+          <linearGradient id="jEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2a4a"/><stop offset="1" stop-color="#1c4f86"/></linearGradient>
+        </defs>
+        <ellipse cx="60" cy="114" rx="28" ry="5" fill="#000" opacity=".35"/>
+        <path d="M60 30 Q57 18 63 10" stroke="#6cc9f3" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <circle cx="63" cy="9" r="4.5" fill="#ffd27a"/>
+        <!-- 抱着一杯奶茶 -->
+        <path d="M60 28 C88 28 106 50 106 78 C106 100 88 110 60 110 C32 110 14 100 14 78 C14 50 32 28 60 28 Z" fill="url(#jBody)"/>
+        <ellipse cx="38" cy="46" rx="13" ry="8" fill="#fff" opacity=".85" transform="rotate(-30 38 46)"/>
+        <circle cx="54" cy="38" r="3" fill="#fff" opacity=".85"/>
+        <g class="lid"><ellipse cx="45" cy="66" rx="7.5" ry="9" fill="url(#jEye)"/></g>
+        <g class="lid"><ellipse cx="75" cy="66" rx="7.5" ry="9" fill="url(#jEye)"/></g>
+        <circle cx="47" cy="63" r="3" fill="#fff"/><circle cx="77" cy="63" r="3" fill="#fff"/>
+        <ellipse cx="32" cy="78" rx="6" ry="3.4" fill="#ffb547" opacity=".55"/>
+        <ellipse cx="88" cy="78" rx="6" ry="3.4" fill="#ffb547" opacity=".55"/>
+        <path d="M55 77 q2.5 3 5 0 q2.5 3 5 0" stroke="#0d2a4a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M48 84 h24 l-3 22 h-18 z" fill="#f2eee4"/>
+        <path d="M49 92 h22" stroke="#c99a5b" stroke-width="6"/>
+        <circle cx="55" cy="101" r="2" fill="#4a3220"/><circle cx="61" cy="103" r="2" fill="#4a3220"/><circle cx="66" cy="100" r="2" fill="#4a3220"/>
+        <path d="M64 84 l6 -14" stroke="#4fd8ff" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="44" cy="92" rx="6" ry="7" fill="#3fb4f0"/><ellipse cx="76" cy="92" rx="6" ry="7" fill="#3fb4f0"/>
+      </svg>
+    </div>
+  </div>
+
+  <h2>你的支持会花在哪</h2>
+  <ul class="uses">
+    <li class="panel"><b>AI 服务</b><span>Codex 和 Claude Code 是我写代码的搭档，写功能、修 bug、做界面都靠它们。这是最大的一笔开销。</span></li>
+    <li class="panel"><b>域名</b><span>nuoyannotebook.xyz 每年都要续费，不然大家就找不到纸间了。</span></li>
+    <li class="panel"><b>服务器</b><span>官网、下载和反馈收集，都得一直开着。</span></li>
+  </ul>
+
+  <h2>怎么支持</h2>
+  <div class="main-way panel">
+    <p class="way-title"><b>去赞助页面</b><span class="badge">推荐</span></p>
+    <p>正式的赞助入口放在纸间官网，具体的支持方式都在那里。</p>
+    <a class="cta" href="https://nuoyannotebook.xyz/support.html" target="_blank" rel="noopener">前往赞助页面 <span>→</span></a>
+    <span class="url">nuoyannotebook.xyz/support.html</span>
+  </div>
+
+  <h2>不花钱也能支持</h2>
+  <div class="free">
+    <a class="panel" href="https://github.com/haha362636-coder/paperroom" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z"/></svg></span>
+      <span><b>给纸间点个 Star</b><small>在 GitHub 上点一下，能让更多人看到它。</small></span>
+    </a>
+    <a class="panel" href="https://space.bilibili.com/3546936296606370" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M8 2l3 4M16 2l-3 4M9 12v2M15 12v2"/></svg></span>
+      <span><b>B站关注 + 三连</b><small>开发过程都会发在 B站，你的三连是最直接的鼓励。</small></span>
+    </a>
+    <a class="panel" href="https://github.com/haha362636-coder/paperroom/issues" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg></span>
+      <span><b>提反馈、报 bug</b><small>新手写的代码难免有问题，在 Issue 里告诉我，我会认真看。</small></span>
+    </a>
+    <a class="panel" href="https://haha362636-coder.github.io/paperroom/" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7h16v-7M12 3v12M7 8l5-5 5 5"/></svg></span>
+      <span><b>分享给朋友</b><small>把纸间的在线体验链接发给可能喜欢它的人。</small></span>
+    </a>
+  </div>
+
+  <div class="note">
+    <p><strong>赞助完全自愿。</strong>不赞助，纸间也照常免费、照常更新，功能上不会有任何区别。</p>
+    <p>如果手头正好紧，把这份心意留给你自己想做的事，也很好。</p>
+  </div>
+</main>
+
+<footer>
+  <span>© 2026 Bobs · <a href="index.html">回到主页</a></span>
+  <span>谢谢每一个愿意为我做的东西花时间的人。</span>
+</footer>
+
+<script>
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.getElementById('rain'), x = c.getContext('2d'), d = devicePixelRatio || 1; let drops = [], w, h;
+  const size = () => { w = c.width = innerWidth * d; h = c.height = innerHeight * d;
+    drops = Array.from({length: Math.round(innerWidth / 12)}, () => ({x: Math.random()*w, y: Math.random()*h, l: (Math.random()*14+8)*d, v: (Math.random()*6+9)*d, a: Math.random()*.2+.06})); };
+  size(); addEventListener('resize', size);
+  (function f(){ x.clearRect(0,0,w,h); x.lineWidth = d;
+    for (const p of drops){ x.strokeStyle = `rgba(190,230,255,${p.a})`; x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x - p.l*.18, p.y + p.l); x.stroke();
+      p.y += p.v; p.x -= p.v*.18; if (p.y > h) { p.y = -p.l; p.x = Math.random()*w*1.1; } }
+    requestAnimationFrame(f); })();
+})();
+</script>
+</body>
+</html>
