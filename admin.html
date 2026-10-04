@@ -48,6 +48,24 @@ td .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 .pill.draft{background:#ffb54724;color:var(--amber)}
 .cm-text{max-width:460px;white-space:pre-wrap;overflow-wrap:anywhere;color:#d5dde7}
 .muted{color:var(--dim);font-family:var(--f-mono);font-size:12px}
+.pill.wait{background:#ffffff14;color:var(--mute)}
+.pill.no{background:#ff7a6b24;color:var(--red)}
+.reason{font-size:12px;color:var(--amber);margin-top:4px}
+.dot{display:inline-block;min-width:18px;padding:0 5px;border-radius:999px;background:var(--amber);color:#1d1406;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.filters button{background:#0a1322b3;border:1px solid var(--line);border-radius:999px;padding:4px 13px;font-size:13px;color:var(--mute);cursor:pointer}
+.filters button.on{background:var(--amber);border-color:var(--amber);color:#1d1406}
+.word-form{padding:20px 22px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end;margin-bottom:12px}
+.word-form .status{grid-column:1/-1}
+@media (max-width:760px){.word-form{grid-template-columns:1fr 1fr}}
+select.input{appearance:none;cursor:pointer}
+.hint{font-size:13px;color:var(--dim);margin:0 0 14px}
+.word-list{padding:18px 20px;display:flex;flex-wrap:wrap;gap:8px}
+.word{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-radius:999px;border:1px solid var(--line);font-size:13.5px;background:#ffffff08}
+.word.review{border-style:dashed;border-color:#ffb54777}
+.word small{font-family:var(--f-mono);font-size:10.5px;color:var(--dim)}
+.word button{background:none;border:0;color:var(--dim);cursor:pointer;font-size:15px;line-height:1;width:22px;height:22px;border-radius:50%}
+.word button:hover{background:#ff7a6b33;color:var(--red)}
 </style>
 </head>
 <body>
@@ -83,7 +101,9 @@ td .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
     <div class="tabs" id="tabs">
       <button type="button" data-tab="write" class="on">✍️ 写文章</button>
       <button type="button" data-tab="posts">📚 文章管理</button>
-      <button type="button" data-tab="comments">💬 评论管理</button>
+      <button type="button" data-tab="comments">💬 评论管理 <span class="dot" id="pendingDot" hidden></span></button>
+      <button type="button" data-tab="words">🛡️ 屏蔽词</button>
+      <button type="button" data-tab="users">👥 用户</button>
     </div>
 
     <section data-pane="write">
@@ -131,8 +151,33 @@ td .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
     </section>
 
     <section data-pane="comments" hidden>
+      <div class="filters" id="cmFilter">
+        <button type="button" data-f="pending" class="on">待审核</button>
+        <button type="button" data-f="approved">已通过</button>
+        <button type="button" data-f="rejected">已拒绝</button>
+        <button type="button" data-f="">全部</button>
+      </div>
       <div class="panel table-wrap">
-        <table><thead><tr><th>昵称</th><th>内容</th><th>文章</th><th>时间</th><th style="text-align:right">操作</th></tr></thead><tbody id="cmRows"></tbody></table>
+        <table><thead><tr><th>昵称</th><th>内容</th><th>文章</th><th>状态</th><th>时间</th><th style="text-align:right">操作</th></tr></thead><tbody id="cmRows"></tbody></table>
+      </div>
+    </section>
+
+    <section data-pane="words" hidden>
+      <form class="panel word-form" id="wordForm">
+        <div class="field"><label for="wWord">屏蔽词</label><input class="input" id="wWord" maxlength="40" required placeholder="比如：加微信"></div>
+        <div class="field"><label for="wCat">分类</label><select class="input" id="wCat"><option>广告</option><option>色情</option><option>赌博</option><option>违法</option><option>辱骂</option><option>其他</option></select></div>
+        <div class="field"><label for="wAct">处理方式</label><select class="input" id="wAct"><option value="block">直接拦截</option><option value="review">进入待审核</option></select></div>
+        <button class="btn btn-neon" type="submit">添加</button>
+        <p class="status" id="wSt" role="status"></p>
+      </form>
+      <p class="hint">匹配时会忽略空格、标点、符号和大小写，所以「加 微·信」「加★V★X」也能识别。另外：带链接、或者有 6 位以上连续数字（QQ / 手机号）的评论会自动进入待审核。</p>
+      <div class="filters" id="wFilter"></div>
+      <div class="panel word-list" id="wordList"></div>
+    </section>
+
+    <section data-pane="users" hidden>
+      <div class="panel table-wrap">
+        <table><thead><tr><th>昵称</th><th>注册时间</th><th>评论数</th><th>状态</th><th style="text-align:right">操作</th></tr></thead><tbody id="userRows"></tbody></table>
       </div>
     </section>
   </div>
@@ -159,14 +204,14 @@ async function boot(){
   if (!Blog.ready) { Blog.notConfigured($('#cfgMsg')); return; }
   const { data: { session } } = await db.auth.getSession();
   show(session);
-  db.auth.onAuthStateChange((_e, s) => show(s));
+  db.auth.onAuthStateChange((_e, s) => setTimeout(() => show(s), 0));
 }
 function show(session){
   const email = session?.user?.email || '';
   const admin = email && (!Blog.cfg.adminEmail || email.toLowerCase() === Blog.cfg.adminEmail.toLowerCase());
   $('#loginBox').hidden = !!admin; $('#dash').hidden = !admin;
   if (session && !admin) { $('#loginSt').className = 'status err'; $('#loginSt').textContent = '这个账号不是管理员。'; db.auth.signOut(); }
-  if (admin) { $('#whoami').textContent = '已登录：' + email; loadPosts(); loadComments(); }
+  if (admin) { $('#whoami').textContent = '已登录：' + email; loadPosts(); loadComments(); loadWords(); loadUsers(); }
 }
 $('#loginBox').addEventListener('submit', async e => {
   e.preventDefault(); const st = $('#loginSt'), b = $('#loginBtn');
@@ -264,24 +309,83 @@ $('#postRows').addEventListener('click', async e => {
 });
 
 /* ---------- 评论管理 ---------- */
+let cmFilter = 'pending';
+const ST = { approved: ['pub', '已通过'], pending: ['wait', '待审核'], rejected: ['no', '已拒绝'] };
 async function loadComments(){
-  const { data, error } = await db.from('comments').select('id,author,content,is_admin,created_at,post_id,posts(title)').order('created_at', { ascending: false }).limit(200);
+  let q = db.from('comments').select('id,author,content,is_admin,status,reason,created_at,post_id,user_id,posts(title),profiles(banned)').order('created_at', { ascending: false }).limit(300);
+  if (cmFilter) q = q.eq('status', cmFilter);
+  const [{ data, error }, { count }] = await Promise.all([q, db.from('comments').select('id', { count: 'exact', head: true }).eq('status', 'pending')]);
+  $('#pendingDot').hidden = !count; $('#pendingDot').textContent = count || '';
   const tb = $('#cmRows');
-  if (error) { tb.innerHTML = `<tr><td colspan="5" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
-  tb.innerHTML = data.length ? data.map(c => `<tr>
-    <td><b>${Blog.esc(c.author)}</b>${c.is_admin ? ' <span class="pill draft">博主</span>' : ''}</td>
-    <td><div class="cm-text">${Blog.esc(c.content)}</div></td>
+  if (error) { tb.innerHTML = `<tr><td colspan="6" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = data.length ? data.map(c => {
+    const banned = c.profiles?.banned;
+    return `<tr>
+    <td><b>${Blog.esc(c.author)}</b>${c.is_admin ? ' <span class="pill draft">博主</span>' : ''}${banned ? ' <span class="pill no">已禁言</span>' : ''}</td>
+    <td><div class="cm-text">${Blog.esc(c.content)}</div>${c.reason ? `<div class="reason">⚠ ${Blog.esc(c.reason)}</div>` : ''}</td>
     <td><a href="post.html?id=${c.post_id}" target="_blank" rel="noopener" style="color:var(--neon)">${Blog.esc(c.posts?.title || '（已删除）')}</a></td>
+    <td><span class="pill ${ST[c.status]?.[0] || ''}">${ST[c.status]?.[1] || c.status}</span></td>
     <td class="muted">${Blog.date(c.created_at, true)}</td>
-    <td><div class="acts"><button class="btn btn-danger btn-sm" data-del="${c.id}" type="button">删除</button></div></td></tr>`).join('')
-    : '<tr><td colspan="5" class="empty">还没有人评论。</td></tr>';
+    <td><div class="acts">
+      ${c.status !== 'approved' ? `<button class="btn btn-neon btn-sm" data-st="approved" data-id="${c.id}" type="button">通过</button>` : ''}
+      ${c.status !== 'rejected' ? `<button class="btn btn-ghost btn-sm" data-st="rejected" data-id="${c.id}" type="button">拒绝</button>` : ''}
+      ${c.user_id && !c.is_admin ? `<button class="btn btn-ghost btn-sm" data-ban="${c.user_id}" data-v="${banned ? '' : '1'}" type="button">${banned ? '解除禁言' : '禁言'}</button>` : ''}
+      <button class="btn btn-danger btn-sm" data-del="${c.id}" type="button">删除</button>
+    </div></td></tr>`; }).join('')
+    : `<tr><td colspan="6" class="empty">${cmFilter === 'pending' ? '没有待审核的评论 🎉' : '这里还没有评论。'}</td></tr>`;
 }
+$('#cmFilter').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  cmFilter = b.dataset.f; $$('#cmFilter button').forEach(x => x.classList.toggle('on', x === b)); loadComments(); });
 $('#cmRows').addEventListener('click', async e => {
-  const b = e.target.closest('button[data-del]'); if (!b || !confirmTwice(b, '确认删除？')) return;
-  b.disabled = true; const { error } = await db.from('comments').delete().eq('id', b.dataset.del);
-  if (error) { b.disabled = false; b.textContent = '删除失败'; return; }
-  loadComments(); loadPosts();
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.st) { b.disabled = true; await db.from('comments').update({ status: b.dataset.st, reason: '' }).eq('id', b.dataset.id); loadComments(); loadPosts(); }
+  if (b.dataset.ban) { b.disabled = true; await setBan(b.dataset.ban, !!b.dataset.v); loadComments(); loadUsers(); }
+  if (b.dataset.del && confirmTwice(b, '确认删除？')) { b.disabled = true;
+    const { error } = await db.from('comments').delete().eq('id', b.dataset.del);
+    if (error) { b.disabled = false; b.textContent = '删除失败'; return; }
+    loadComments(); loadPosts(); }
 });
+
+/* ---------- 屏蔽词 ---------- */
+let words = [], wCat = '';
+async function loadWords(){
+  const { data, error } = await db.from('blocked_words').select('word,category,action').order('category').order('word');
+  if (error) { $('#wordList').innerHTML = `<p class="status err">加载失败：${Blog.esc(error.message)}<br>如果提示表不存在，说明还没运行 supabase/002-comments-moderation.sql。</p>`; return; }
+  words = data; renderWords();
+}
+function renderWords(){
+  const cats = [...new Set(words.map(w => w.category))];
+  $('#wFilter').innerHTML = ['', ...cats].map(c => `<button type="button" data-c="${Blog.esc(c)}" class="${c === wCat ? 'on' : ''}">${c ? Blog.esc(c) : '全部'} ${words.filter(w => !c || w.category === c).length}</button>`).join('');
+  const list = words.filter(w => !wCat || w.category === wCat);
+  $('#wordList').innerHTML = list.length ? list.map(w => `<span class="word ${w.action}" title="${w.action === 'block' ? '直接拦截' : '进入待审核'}">${Blog.esc(w.word)}<small>${w.action === 'block' ? '拦截' : '审核'}</small><button type="button" data-w="${Blog.esc(w.word)}" aria-label="删除">×</button></span>`).join('') : '<p class="status">还没有屏蔽词。</p>';
+}
+$('#wFilter').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wCat = b.dataset.c; renderWords(); });
+$('#wordList').addEventListener('click', async e => { const b = e.target.closest('[data-w]'); if (!b) return;
+  await db.from('blocked_words').delete().eq('word', b.dataset.w); loadWords(); });
+$('#wordForm').addEventListener('submit', async e => {
+  e.preventDefault(); const st = $('#wSt'), word = $('#wWord').value.trim();
+  if (!word) return;
+  const { error } = await db.from('blocked_words').upsert({ word, category: $('#wCat').value, action: $('#wAct').value });
+  st.className = 'status ' + (error ? 'err' : 'ok'); st.textContent = error ? '添加失败：' + error.message : `已添加「${word}」`;
+  if (!error) { $('#wWord').value = ''; loadWords(); }
+});
+
+/* ---------- 用户 ---------- */
+async function setBan(uid, v){ return db.from('profiles').update({ banned: v }).eq('id', uid); }
+async function loadUsers(){
+  const { data, error } = await db.from('profiles').select('id,nickname,banned,created_at,comments(count)').order('created_at', { ascending: false }).limit(500);
+  const tb = $('#userRows');
+  if (error) { tb.innerHTML = `<tr><td colspan="5" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = data.length ? data.map(u => `<tr>
+    <td><b>${Blog.esc(u.nickname)}</b></td>
+    <td class="muted">${Blog.date(u.created_at, true)}</td>
+    <td class="muted">${u.comments?.[0]?.count ?? 0}</td>
+    <td><span class="pill ${u.banned ? 'no' : 'pub'}">${u.banned ? '已禁言' : '正常'}</span></td>
+    <td><div class="acts"><button class="btn ${u.banned ? 'btn-ghost' : 'btn-danger'} btn-sm" data-ban="${u.id}" data-v="${u.banned ? '' : '1'}" type="button">${u.banned ? '解除禁言' : '禁言'}</button></div></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">还没有人注册。</td></tr>';
+}
+$('#userRows').addEventListener('click', async e => { const b = e.target.closest('[data-ban]'); if (!b) return;
+  b.disabled = true; await setBan(b.dataset.ban, !!b.dataset.v); loadUsers(); loadComments(); });
 
 /* ---------- 启动：恢复没写完的草稿 ---------- */
 try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); if (d) fields.forEach(f => $('#' + f).value = d[f] || ''); } catch (_) {}
