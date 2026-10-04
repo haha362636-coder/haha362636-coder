@@ -85,7 +85,7 @@ select.input{appearance:none;cursor:pointer}
   <form class="login panel" id="loginBox" hidden>
     <div class="eyebrow">Admin</div>
     <h1>管理员登录</h1>
-    <p>登录后就可以写博文、管理评论。</p>
+    <p>这里是<b>博主专用</b>的后台。只是想评论的话，去 <a href="blog.html" style="color:var(--neon);text-decoration:underline">博文页</a>，点右上角「登录 / 注册」就能注册账号。</p>
     <div class="field"><label for="email">邮箱</label><input class="input" id="email" type="email" autocomplete="username" required></div>
     <div class="field"><label for="pwd">密码</label><input class="input" id="pwd" type="password" autocomplete="current-password" required></div>
     <button class="btn btn-neon" id="loginBtn" type="submit">登录</button>
@@ -188,9 +188,9 @@ select.input{appearance:none;cursor:pointer}
   <a href="index.html">回到主页</a>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="js/vendor/supabase.js"></script>
+<script src="js/vendor/marked.min.js"></script>
+<script src="js/vendor/purify.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/blog.js"></script>
 <script>

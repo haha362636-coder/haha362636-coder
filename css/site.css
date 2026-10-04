@@ -92,6 +92,28 @@ textarea.input{resize:vertical;line-height:1.7}
 .md table{border-collapse:collapse;display:block;overflow-x:auto;margin:1em 0}
 .md th,.md td{border:1px solid var(--line);padding:6px 12px}
 
+/* 登录 / 注册弹窗 */
+dialog.auth-dlg{width:calc(100% - 32px);max-width:420px;padding:0;border:1px solid var(--line);border-radius:22px;background:#0b1424f5;color:var(--paper);box-shadow:0 30px 80px -20px #000d}
+dialog.auth-dlg::backdrop{background:#04080fcc;backdrop-filter:blur(4px)}
+.dlg{padding:26px 26px 22px;display:grid;gap:14px}
+.dlg-hd{display:flex;justify-content:space-between;align-items:center}
+.dlg-tabs{display:flex;gap:4px;background:#ffffff0c;border-radius:999px;padding:4px}
+.dlg-tabs button{border:0;background:none;padding:6px 16px;border-radius:999px;font-size:14px;color:var(--mute);cursor:pointer}
+.dlg-tabs button.on{background:var(--paper);color:var(--ink)}
+.x{background:none;border:0;color:var(--mute);font-size:24px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1}
+.x:hover{background:#ffffff12;color:var(--paper)}
+.dlg .agree{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--mute);line-height:1.6}
+.dlg .agree input{margin-top:3px;accent-color:var(--neon)}
+.dlg .link{background:none;border:0;padding:0;font-size:13px;color:var(--mute);cursor:pointer;text-decoration:underline;text-underline-offset:3px;justify-self:start}
+.dlg .link:hover{color:var(--paper)}
+.dlg h3{margin:0;font-family:var(--f-hk);font-size:20px}
+.dlg .tip{margin:0;font-size:13px;color:var(--mute);line-height:1.7}
+.dlg .tip[hidden]{display:none}
+.acct-btns{display:flex;gap:10px;flex-wrap:wrap}
+.nav .auth-btn{border:1px solid #4fd8ff66;background:#4fd8ff14;color:var(--neon);font:inherit;font-size:14px;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;margin-left:4px;flex:none}
+.nav .auth-btn:hover{background:#4fd8ff2a}
+.nav .auth-btn.in{border-color:var(--line);background:#ffffff0c;color:var(--paper)}
+
 footer.site{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding:22px clamp(16px,5vw,48px) calc(22px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--dim);border-top:1px solid #ffffff12;background:#08101ccc}
 footer.site a{text-decoration:underline;text-underline-offset:3px}
 

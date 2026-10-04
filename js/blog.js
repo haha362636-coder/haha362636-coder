@@ -32,6 +32,10 @@
 
     // 后台没配置时的提示
     notConfigured(el) {
+      if (cfg.supabaseUrl && cfg.supabaseAnonKey && !window.supabase) {
+        el.innerHTML = `<div class="notice"><b>页面组件没加载出来。</b><br>可能是网络不稳定，刷新一下试试。</div>`;
+        return;
+      }
       el.innerHTML = `<div class="notice"><b>博客后台还没有配置好。</b><br>
         需要先在 <code>js/config.js</code> 里填好 Supabase 的地址和密钥，步骤见《后台设置教程.md》。
         配置完成后，这里就会显示文章。</div>`;

@@ -51,22 +51,6 @@
 .cm .del{background:none;border:0;padding:0;margin-left:10px;font-size:12px;color:var(--dim);cursor:pointer}
 .cm .del:hover{color:var(--red)}
 
-/* 登录 / 注册弹窗 */
-dialog{width:calc(100% - 32px);max-width:420px;padding:0;border:1px solid var(--line);border-radius:22px;background:#0b1424f5;color:var(--paper);box-shadow:0 30px 80px -20px #000d}
-dialog::backdrop{background:#04080fcc;backdrop-filter:blur(4px)}
-.dlg{padding:26px 26px 22px;display:grid;gap:14px}
-.dlg-hd{display:flex;justify-content:space-between;align-items:center}
-.dlg-tabs{display:flex;gap:4px;background:#ffffff0c;border-radius:999px;padding:4px}
-.dlg-tabs button{border:0;background:none;padding:6px 16px;border-radius:999px;font-size:14px;color:var(--mute);cursor:pointer}
-.dlg-tabs button.on{background:var(--paper);color:var(--ink)}
-.x{background:none;border:0;color:var(--mute);font-size:24px;cursor:pointer;width:36px;height:36px;border-radius:50%;line-height:1}
-.x:hover{background:#ffffff12;color:var(--paper)}
-.dlg .agree{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--mute);line-height:1.6}
-.dlg .agree input{margin-top:3px;accent-color:var(--neon)}
-.dlg .link{background:none;border:0;padding:0;font-size:13px;color:var(--mute);cursor:pointer;text-decoration:underline;text-underline-offset:3px;justify-self:start}
-.dlg .link:hover{color:var(--paper)}
-.dlg h3{margin:0;font-family:var(--f-hk);font-size:20px}
-.dlg .tip{margin:0;font-size:13px;color:var(--mute);line-height:1.7}
 </style>
 </head>
 <body>
@@ -120,72 +104,21 @@ dialog::backdrop{background:#04080fcc;backdrop-filter:blur(4px)}
   <a href="admin.html">管理后台</a>
 </footer>
 
-<dialog id="dlg">
-  <!-- 登录 / 注册 -->
-  <form class="dlg" id="authForm" method="dialog" autocomplete="on">
-    <div class="dlg-hd">
-      <div class="dlg-tabs"><button type="button" data-mode="login" class="on">登录</button><button type="button" data-mode="signup">注册</button></div>
-      <button class="x" type="button" data-close aria-label="关闭">×</button>
-    </div>
-    <div class="field" id="fNick" hidden><label for="aNick">昵称 <small>2～16 个字，会显示在评论旁边</small></label><input class="input" id="aNick" maxlength="16" autocomplete="nickname"></div>
-    <div class="field"><label for="aEmail">邮箱</label><input class="input" id="aEmail" type="email" autocomplete="email" required></div>
-    <div class="field" id="fPwd"><label for="aPwd">密码 <small id="pwdHint" hidden>至少 8 位</small></label><input class="input" id="aPwd" type="password" autocomplete="current-password" minlength="6" required></div>
-    <label class="agree" id="fAgree" hidden><input type="checkbox" id="aAgree">我已阅读评论规范，不发广告、引流、色情、赌博、辱骂等内容，违规会被删除或禁言。</label>
-    <button class="btn btn-neon" id="aSubmit" type="submit">登录</button>
-    <button class="link" type="button" id="forgotBtn">忘记密码？</button>
-    <p class="status" id="aStatus" role="status"></p>
-  </form>
 
-  <!-- 重设密码（从邮件链接回来时显示） -->
-  <form class="dlg" id="resetForm" hidden>
-    <div class="dlg-hd"><h3>设置新密码</h3><button class="x" type="button" data-close aria-label="关闭">×</button></div>
-    <div class="field"><label for="newPwd">新密码 <small>至少 8 位</small></label><input class="input" id="newPwd" type="password" minlength="8" autocomplete="new-password" required></div>
-    <button class="btn btn-neon" type="submit">保存新密码</button>
-    <p class="status" id="rStatus" role="status"></p>
-  </form>
-
-  <!-- 改昵称 -->
-  <form class="dlg" id="nickForm" hidden>
-    <div class="dlg-hd"><h3>修改昵称</h3><button class="x" type="button" data-close aria-label="关闭">×</button></div>
-    <div class="field"><label for="nickInput">新昵称 <small>2～16 个字</small></label><input class="input" id="nickInput" maxlength="16" required></div>
-    <button class="btn btn-neon" type="submit">保存</button>
-    <p class="status" id="nStatus" role="status"></p>
-  </form>
-</dialog>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="js/vendor/supabase.js"></script>
+<script src="js/vendor/marked.min.js"></script>
+<script src="js/vendor/purify.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/blog.js"></script>
+<script src="js/auth.js"></script>
 <script>
-const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const $ = s => document.querySelector(s);
 const id = new URLSearchParams(location.search).get('id');
-const db = Blog.db, article = $('#article'), dlg = $('#dlg');
-let me = null;          // { id, email, nickname, banned }
-
+const db = Blog.db, article = $('#article');
 const say = (el, msg, kind = '') => { el.className = 'status ' + kind; el.textContent = msg; };
-// 把 Supabase 的英文报错翻成人话
-function human(err){
-  const m = err?.message || String(err);
-  if (/Invalid login credentials/i.test(m)) return '邮箱或密码不对，再检查一下。';
-  if (/Email not confirmed/i.test(m)) return '邮箱还没验证，去邮箱点一下确认链接。';
-  if (/already registered|already been registered/i.test(m)) return '这个邮箱已经注册过了，直接登录就行。';
-  if (/Signups not allowed|signup.*disabled/i.test(m)) return '注册功能暂时没开放。';
-  if (/Password should be at least/i.test(m)) return '密码太短了。';
-  if (/rate limit|too many/i.test(m)) return '操作太频繁，过一会儿再试。';
-  if (/row-level security/i.test(m)) return '没有权限，请重新登录后再试。';
-  if (/duplicate key.*nickname/i.test(m)) return '这个昵称已经有人用了，换一个吧。';
-  return m;
-}
 
 /* ---------- 登录状态 ---------- */
-async function refreshMe(session){
-  me = null;
-  if (session?.user) {
-    const { data } = await db.from('profiles').select('nickname,banned').eq('id', session.user.id).maybeSingle();
-    me = { id: session.user.id, email: session.user.email, nickname: data?.nickname || '（资料加载中）', banned: !!data?.banned };
-  }
+Auth.onChange(me => {
   $('#gate').hidden = !!me; $('#cmForm').hidden = !me;
   if (me) {
     $('#meName').textContent = me.nickname;
@@ -193,90 +126,18 @@ async function refreshMe(session){
     if (me.banned) say($('#cmStatus'), '你的账号已被禁止评论。', 'err');
   }
   if (!$('#cmWrap').hidden) loadComments();
-}
-$('#logoutBtn').onclick = () => db.auth.signOut();
-
-/* ---------- 弹窗 ---------- */
-let mode = 'login';
-function openAuth(m){ setMode(m); $('#authForm').hidden = false; $('#resetForm').hidden = $('#nickForm').hidden = true; say($('#aStatus'), ''); dlg.showModal(); }
-function setMode(m){
-  mode = m;
-  $$('.dlg-tabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-  const su = m === 'signup', fg = m === 'forgot';
-  $('.dlg-tabs').hidden = fg;
-  $('#fNick').hidden = $('#fAgree').hidden = $('#pwdHint').hidden = !su;
-  $('#fPwd').hidden = fg; $('#aPwd').required = !fg;
-  $('#aPwd').autocomplete = su ? 'new-password' : 'current-password';
-  $('#aSubmit').textContent = su ? '注册' : fg ? '发送重设密码邮件' : '登录';
-  $('#forgotBtn').textContent = fg ? '← 返回登录' : '忘记密码？';
-  $('#forgotBtn').hidden = su;
-  say($('#aStatus'), '');
-}
-$$('[data-auth]').forEach(b => b.onclick = () => openAuth(b.dataset.auth));
-$('.dlg-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
-$('#forgotBtn').onclick = () => setMode(mode === 'forgot' ? 'login' : 'forgot');
-dlg.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
-
-const backUrl = () => location.origin + location.pathname + location.search;
-
-$('#authForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const st = $('#aStatus'), btn = $('#aSubmit'), email = $('#aEmail').value.trim(), pwd = $('#aPwd').value;
-  if (mode === 'signup') {
-    const nick = $('#aNick').value.trim();
-    if (nick.length < 2 || nick.length > 16) return say(st, '昵称要 2～16 个字。', 'err');
-    if (pwd.length < 8) return say(st, '密码至少 8 位。', 'err');
-    if (!$('#aAgree').checked) return say(st, '请先勾选同意评论规范。', 'err');
-    const { data: taken } = await db.from('profiles').select('id').eq('nickname', nick).maybeSingle();
-    if (taken) return say(st, '这个昵称已经有人用了，换一个吧。', 'err');
-    btn.disabled = true; say(st, '注册中…');
-    const { data, error } = await db.auth.signUp({ email, password: pwd, options: { data: { nickname: nick }, emailRedirectTo: backUrl() } });
-    btn.disabled = false;
-    if (error) return say(st, human(error), 'err');
-    // 开了邮箱验证时，重复注册不会报错，只会返回一个空身份的用户
-    if (data.user && Array.isArray(data.user.identities) && !data.user.identities.length) return say(st, '这个邮箱已经注册过了，直接登录就行。', 'err');
-    if (data.session) { say(st, '注册成功！', 'ok'); setTimeout(() => dlg.close(), 700); }
-    else say(st, '注册成功！我们给你发了一封确认邮件，点邮件里的链接就能登录。没收到的话看看垃圾邮件箱。', 'ok');
-  } else if (mode === 'forgot') {
-    if (!email) return say(st, '先填邮箱。', 'err');
-    btn.disabled = true; say(st, '发送中…');
-    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: backUrl() });
-    btn.disabled = false;
-    say(st, error ? human(error) : '重设密码的邮件已发出，去邮箱点链接就行。', error ? 'err' : 'ok');
-  } else {
-    btn.disabled = true; say(st, '登录中…');
-    const { error } = await db.auth.signInWithPassword({ email, password: pwd });
-    btn.disabled = false;
-    if (error) return say(st, human(error), 'err');
-    say(st, '登录成功！', 'ok'); $('#aPwd').value = ''; setTimeout(() => dlg.close(), 500);
-  }
 });
-
-$('#resetForm').addEventListener('submit', async e => {
-  e.preventDefault(); const pwd = $('#newPwd').value;
-  if (pwd.length < 8) return say($('#rStatus'), '密码至少 8 位。', 'err');
-  const { error } = await db.auth.updateUser({ password: pwd });
-  if (error) return say($('#rStatus'), human(error), 'err');
-  say($('#rStatus'), '新密码已保存，你已经登录了。', 'ok'); setTimeout(() => dlg.close(), 900);
-});
-
-$('#renameBtn').onclick = () => { $('#authForm').hidden = $('#resetForm').hidden = true; $('#nickForm').hidden = false; $('#nickInput').value = me?.nickname || ''; say($('#nStatus'), ''); dlg.showModal(); };
-$('#nickForm').addEventListener('submit', async e => {
-  e.preventDefault(); const nick = $('#nickInput').value.trim();
-  if (nick.length < 2 || nick.length > 16) return say($('#nStatus'), '昵称要 2～16 个字。', 'err');
-  const { error } = await db.from('profiles').update({ nickname: nick }).eq('id', me.id);
-  if (error) return say($('#nStatus'), human(error), 'err');
-  say($('#nStatus'), '改好了！之前的评论会保留原来的名字。', 'ok');
-  me.nickname = nick; $('#meName').textContent = nick; setTimeout(() => dlg.close(), 900);
-});
+document.querySelectorAll('[data-auth]').forEach(b => b.onclick = () => Auth.open(b.dataset.auth));
+$('#renameBtn').onclick = () => Auth.account();
+$('#logoutBtn').onclick = () => Auth.signOut();
 
 /* ---------- 评论 ---------- */
 async function loadComments(){
   const { data, error } = await db.from('comments').select('id,author,content,is_admin,status,user_id,created_at')
     .eq('post_id', id).order('created_at', { ascending: true });
-  if (error) { $('#cmList').innerHTML = `<p class="status err">评论加载失败：${Blog.esc(human(error))}</p>`; return; }
-  const visible = data.filter(c => c.status === 'approved');
-  $('#cmCount').textContent = `${visible.length} 条`;
+  if (error) { $('#cmList').innerHTML = `<p class="status err">评论加载失败：${Blog.esc(Auth.human(error))}</p>`; return; }
+  const me = Auth.me;
+  $('#cmCount').textContent = `${data.filter(c => c.status === 'approved').length} 条`;
   $('#cmList').innerHTML = data.length ? data.map(c => {
     const mine = me && c.user_id === me.id;
     const tag = c.status === 'pending' ? '<span class="badge wait">审核中 · 只有你能看到</span>'
@@ -300,22 +161,17 @@ $('#cmForm').addEventListener('submit', async e => {
   if (!content) return say(st, '写点内容再发吧。', 'err');
   btn.disabled = true; say(st, '发送中…');
   // 作者、审核状态都由数据库决定，这里只传文章和内容
-  const { data, error } = await db.from('comments').insert({ post_id: id, author: me.nickname, content }).select('status').single();
+  const { data, error } = await db.from('comments').insert({ post_id: id, author: Auth.me.nickname, content }).select('status').single();
   btn.disabled = false;
-  if (error) return say(st, human(error), 'err');
+  if (error) return say(st, Auth.human(error), 'err');
   $('#cmText').value = ''; $('#counter').textContent = '0 / 500';
   say(st, data?.status === 'pending' ? '已提交！因为包含链接或联系方式，需要博主审核后才会公开显示。' : '评论成功，谢谢你！', 'ok');
   loadComments();
 });
 
-/* ---------- 启动 ---------- */
+/* ---------- 文章 ---------- */
 (async () => {
   if (!Blog.ready) { Blog.notConfigured(article); return; }
-  db.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY') { $('#authForm').hidden = $('#nickForm').hidden = true; $('#resetForm').hidden = false; dlg.showModal(); }
-    // 回调里不能直接再调数据库（supabase-js 会卡住），放到下一轮执行
-    if (['SIGNED_IN', 'SIGNED_OUT', 'INITIAL_SESSION', 'USER_UPDATED'].includes(event)) setTimeout(() => refreshMe(session), 0);
-  });
   if (!id) { article.innerHTML = '<div class="empty">没有指定文章。<a href="blog.html" style="color:var(--neon)">去看看全部博文 →</a></div>'; return; }
   const { data: p, error } = await db.from('posts').select('*').eq('id', id).maybeSingle();
   if (error || !p) { article.innerHTML = `<div class="empty">${error ? '加载失败：' + Blog.esc(error.message) : '这篇文章不存在，或者已经被删除了。'}<br><a href="blog.html" style="color:var(--neon)">回到全部博文 →</a></div>`; return; }
