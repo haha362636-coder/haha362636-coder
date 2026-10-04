@@ -80,6 +80,13 @@
       </div>
     </div>
 
+    <!-- 已登录但邮箱没验证 -->
+    <div class="gate" id="verifyGate" hidden>
+      <p>你的邮箱还没验证，验证后才能评论。</p>
+      <div class="btns"><button class="btn btn-neon btn-sm" type="button" id="verifyBtn">发送验证码</button></div>
+      <p class="status" id="verifySt" role="status" style="flex-basis:100%"></p>
+    </div>
+
     <!-- 已登录 -->
     <form class="cm-form" id="cmForm" autocomplete="off" hidden>
       <div class="me-bar">
@@ -119,7 +126,8 @@ const say = (el, msg, kind = '') => { el.className = 'status ' + kind; el.textCo
 
 /* ---------- 登录状态 ---------- */
 Auth.onChange(me => {
-  $('#gate').hidden = !!me; $('#cmForm').hidden = !me;
+  const ok = me && me.verified;
+  $('#gate').hidden = !!me; $('#verifyGate').hidden = !me || ok; $('#cmForm').hidden = !ok;
   if (me) {
     $('#meName').textContent = me.nickname;
     $('#cmText').disabled = $('#cmSend').disabled = me.banned;
@@ -129,6 +137,7 @@ Auth.onChange(me => {
 });
 document.querySelectorAll('[data-auth]').forEach(b => b.onclick = () => Auth.open(b.dataset.auth));
 $('#renameBtn').onclick = () => Auth.account();
+$('#verifyBtn').onclick = async () => { const b = $('#verifyBtn'); b.disabled = true; $('#verifySt').textContent = '发送中…'; const ok = await Auth.verifyEmail($('#verifySt')); b.disabled = false; if (ok) $('#verifySt').textContent = ''; };
 $('#logoutBtn').onclick = () => Auth.signOut();
 
 /* ---------- 评论 ---------- */

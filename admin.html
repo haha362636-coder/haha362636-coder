@@ -177,7 +177,7 @@ select.input{appearance:none;cursor:pointer}
 
     <section data-pane="users" hidden>
       <div class="panel table-wrap">
-        <table><thead><tr><th>昵称</th><th>注册时间</th><th>评论数</th><th>状态</th><th style="text-align:right">操作</th></tr></thead><tbody id="userRows"></tbody></table>
+        <table><thead><tr><th>昵称 / 邮箱</th><th>邮箱验证</th><th>注册时间</th><th>评论数</th><th>状态</th><th style="text-align:right">操作</th></tr></thead><tbody id="userRows"></tbody></table>
       </div>
     </section>
   </div>
@@ -373,19 +373,29 @@ $('#wordForm').addEventListener('submit', async e => {
 /* ---------- 用户 ---------- */
 async function setBan(uid, v){ return db.from('profiles').update({ banned: v }).eq('id', uid); }
 async function loadUsers(){
-  const { data, error } = await db.from('profiles').select('id,nickname,banned,created_at,comments(count)').order('created_at', { ascending: false }).limit(500);
   const tb = $('#userRows');
-  if (error) { tb.innerHTML = `<tr><td colspan="5" class="status err">加载失败：${Blog.esc(error.message)}</td></tr>`; return; }
+  const { data, error } = await db.rpc('admin_list_users');
+  if (error) { tb.innerHTML = `<tr><td colspan="6" class="status err">加载失败：${Blog.esc(error.message)}<br>如果提示函数不存在，说明还没运行 supabase/003-email-verify-and-alias.sql。</td></tr>`; return; }
+  const meId = (await db.auth.getSession()).data.session?.user?.id;
   tb.innerHTML = data.length ? data.map(u => `<tr>
-    <td><b>${Blog.esc(u.nickname)}</b></td>
+    <td><b>${Blog.esc(u.nickname || '（无资料）')}</b><div class="muted">${Blog.esc(u.email || '')}</div></td>
+    <td><span class="pill ${u.email_verified ? 'pub' : 'wait'}">${u.email_verified ? '已验证' : '未验证'}</span></td>
     <td class="muted">${Blog.date(u.created_at, true)}</td>
-    <td class="muted">${u.comments?.[0]?.count ?? 0}</td>
+    <td class="muted">${u.comment_count}</td>
     <td><span class="pill ${u.banned ? 'no' : 'pub'}">${u.banned ? '已禁言' : '正常'}</span></td>
-    <td><div class="acts"><button class="btn ${u.banned ? 'btn-ghost' : 'btn-danger'} btn-sm" data-ban="${u.id}" data-v="${u.banned ? '' : '1'}" type="button">${u.banned ? '解除禁言' : '禁言'}</button></div></td></tr>`).join('')
-    : '<tr><td colspan="5" class="empty">还没有人注册。</td></tr>';
+    <td><div class="acts">${u.id === meId ? '<span class="muted">（你自己）</span>' : `
+      <button class="btn ${u.banned ? 'btn-ghost' : 'btn-danger'} btn-sm" data-ban="${u.id}" data-v="${u.banned ? '' : '1'}" type="button">${u.banned ? '解除禁言' : '禁言'}</button>
+      <button class="btn btn-danger btn-sm" data-deluser="${u.id}" type="button">删除账号</button>`}</div></td></tr>`).join('')
+    : '<tr><td colspan="6" class="empty">还没有人注册。</td></tr>';
 }
-$('#userRows').addEventListener('click', async e => { const b = e.target.closest('[data-ban]'); if (!b) return;
-  b.disabled = true; await setBan(b.dataset.ban, !!b.dataset.v); loadUsers(); loadComments(); });
+$('#userRows').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ban]'), d = e.target.closest('[data-deluser]');
+  if (b) { b.disabled = true; await setBan(b.dataset.ban, !!b.dataset.v); loadUsers(); loadComments(); }
+  if (d && confirmTwice(d, '确认删除？评论也会一起删')) { d.disabled = true;
+    const { error } = await db.rpc('admin_delete_user', { uid: d.dataset.deluser });
+    if (error) { d.disabled = false; d.textContent = '删除失败'; return; }
+    loadUsers(); loadComments(); loadPosts(); }
+});
 
 /* ---------- 启动：恢复没写完的草稿 ---------- */
 try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); if (d) fields.forEach(f => $('#' + f).value = d[f] || ''); } catch (_) {}

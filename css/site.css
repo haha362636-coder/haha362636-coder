@@ -110,6 +110,12 @@ dialog.auth-dlg::backdrop{background:#04080fcc;backdrop-filter:blur(4px)}
 .dlg .tip{margin:0;font-size:13px;color:var(--mute);line-height:1.7}
 .dlg .tip[hidden]{display:none}
 .acct-btns{display:flex;gap:10px;flex-wrap:wrap}
+.code-input{font-family:var(--f-mono);font-size:24px;letter-spacing:.35em;text-align:center;padding:12px}
+.code-input::placeholder{letter-spacing:normal;font-size:15px;font-family:var(--f-body)}
+.code-links{display:flex;justify-content:space-between;gap:12px}
+.verify-box{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid #ffb5474d;background:#ffb54712;font-size:13.5px;color:#ffdca6}
+.dlg .link:disabled{opacity:.5;cursor:default;text-decoration:none}
+.dlg .tip b{color:var(--paper);font-weight:500;word-break:break-all}
 .nav .auth-btn{border:1px solid #4fd8ff66;background:#4fd8ff14;color:var(--neon);font:inherit;font-size:14px;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;margin-left:4px;flex:none}
 .nav .auth-btn:hover{background:#4fd8ff2a}
 .nav .auth-btn.in{border-color:var(--line);background:#ffffff0c;color:var(--paper)}
