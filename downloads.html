@@ -46,12 +46,15 @@ td.op a:hover{text-decoration:underline;text-underline-offset:3px}
 .badge.new{background:var(--amber);color:#1d1406}
 .badge.old{background:#ffffff14;color:var(--mute)}
 .badge.web{background:#6fe3b424;color:var(--jade)}
+.badge.beta{background:#4fd8ff24;color:var(--neon)}
+.cat-links{display:flex;gap:14px}
 .more-row td{text-align:center;padding:10px}
 .more-row button{background:none;border:0;color:var(--mute);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .more-row button:hover{color:var(--paper)}
 .old-row{display:none}
 .show-old .old-row{display:table-row}
 .foot-note{margin-top:22px;font-size:13px;color:var(--dim);text-align:center}
+.foot-note code{font-family:var(--f-mono);font-size:12px;background:#ffffff12;padding:1px 6px;border-radius:6px;color:var(--mute)}
 .foot-note a{color:var(--mute);text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
@@ -73,13 +76,13 @@ td.op a:hover{text-decoration:underline;text-underline-offset:3px}
   <section class="board panel" aria-label="公告">
     <div class="board-hd">公告：</div>
     <div class="board-body">
-      <span class="hot" id="hotLine">纸间 Paperroom 最新版已发布！</span>
-      <span class="ok">Mac 版需要 Apple Silicon 芯片 + macOS 14 及以上</span>
+      <span class="hot" id="hotLine">新工具 Noe Agent 测试版上线啦！</span>
+      <span class="ok">下载前先看芯片：点左上角  →「关于本机」，Apple M 系列和 Intel 下载的安装包不一样</span>
       <span class="tip">【全部免费 · 开源 · 无广告】</span>
       <a href="https://github.com/haha362636-coder/paperroom/issues" target="_blank" rel="noopener">遇到问题？点击反馈</a>
     </div>
     <div class="board-stats">
-      <span><b id="stProjects">2</b>个项目</span>
+      <span><b id="stProjects">3</b>个项目</span>
       <span><b id="stFiles">–</b>个文件</span>
       <span><b id="stDl">–</b>次下载</span>
     </div>
@@ -87,7 +90,7 @@ td.op a:hover{text-decoration:underline;text-underline-offset:3px}
 
   <div id="cats"><div class="skeleton" style="margin-top:18px"></div></div>
 
-  <p class="foot-note">第一次打开 Mac 版被系统拦住？到「系统设置 → 隐私与安全性」底部点「仍要打开」。<br>
+  <p class="foot-note">第一次打开 Mac 版被系统拦住？纸间：到「系统设置 → 隐私与安全性」底部点「仍要打开」；Noe Agent：在终端执行 <code>xattr -cr "/Applications/Noe Agent.app"</code>。<br>
   下载数据来自 GitHub，偶尔加载不出来时会显示上次记录的文件列表。 · <a href="support.html">觉得好用？支持一下 ♥</a></p>
 </main>
 
@@ -100,12 +103,16 @@ td.op a:hover{text-decoration:underline;text-underline-offset:3px}
 /* ---------- 要展示的项目（以后有新项目，往这里加一项就行） ---------- */
 const OWNER = 'haha362636-coder';
 const PROJECTS = [
-  { repo: 'paperroom', title: '纸间 Paperroom', note: '3D 皮面白板笔记',
+  { repo: 'noe-agent', title: 'Noe Agent', note: 'AI 编程助手聊天软件 · macOS 12+', post: true, extra: [] },
+  { repo: 'paperroom', title: '纸间 Paperroom', note: '3D 皮面白板笔记 · macOS 14+',
     extra: [{ name: '网页版（在线体验）', hint: '浏览器打开即用，需要支持 WebGL', url: 'https://haha362636-coder.github.io/paperroom/', open: true }] },
   { repo: 'browserpro', title: 'browserpro', note: 'free ai browser', extra: [] },
 ];
-// GitHub 接口访问不了时用的备用列表（2026-10-03 记录）
+// GitHub 接口访问不了时用的备用列表（2026-10-05 记录）
 const FALLBACK = {
+  'noe-agent': { branch: 'main', releases: [
+    { tag: 'v0.2.0-beta.1', date: '2026-10-05T05:56:39Z', pre: true, assets: [
+      ['Noe-Agent-0.2.0-beta.1-mac-arm64.dmg', 109047057, 0], ['Noe-Agent-0.2.0-beta.1-mac-x64.dmg', 116870931, 0], ['SHA256SUMS.txt', 204, 0] ] } ] },
   paperroom: { branch: 'main', releases: [
     { tag: 'v1.1.0', date: '2026-09-29T13:24:20Z', assets: [
       ['Paperroom-1.1.0-mac-arm64.dmg', 5960068, 3], ['Paperroom-1.1.0-mac-arm64.dmg.sha256', 96, 0] ] },
@@ -118,8 +125,9 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const size = b => b == null ? '—' : b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
 const day = iso => iso ? iso.slice(0, 10) : '—';
 function kind(name){
-  if (/\.dmg$/i.test(name)) return ['macOS 安装包', 'Apple Silicon · 拖进「应用程序」即可'];
-  if (/\.sha256$/i.test(name)) return ['校验文件', '用来确认安装包没有损坏'];
+  if (/x64.*\.dmg$/i.test(name)) return ['macOS 安装包', 'Intel 芯片的 Mac 下载这个'];
+  if (/\.dmg$/i.test(name)) return ['macOS 安装包', 'Apple 芯片（M1 / M2 / M3 / M4…）的 Mac 下载这个'];
+  if (/\.sha256$|sha256sums/i.test(name)) return ['校验文件', '用来确认安装包没有损坏，一般用不到'];
   if (/\.(mp4|mov)$/i.test(name)) return ['宣传片', '视频文件'];
   if (/\.zip$/i.test(name)) return ['压缩包', ''];
   return ['文件', ''];
@@ -134,7 +142,7 @@ async function loadRepo(repo){
   try {
     const [info, rels] = await Promise.all([gh(repo), gh(repo + '/releases?per_page=20')]);
     return { live: true, branch: info.default_branch,
-      releases: rels.filter(r => !r.draft).map(r => ({ tag: r.tag_name, date: r.published_at,
+      releases: rels.filter(r => !r.draft).map(r => ({ tag: r.tag_name, date: r.published_at, pre: r.prerelease,
         assets: r.assets.map(a => [a.name, a.size, a.download_count, a.browser_download_url]) })) };
   } catch (e) { return { live: false, ...FALLBACK[repo] }; }
 }
@@ -163,7 +171,8 @@ function rowHtml(r){
         files++; dls += count || 0;
         rows.push({ name, hint: `${k}${hint ? ' · ' + hint : ''}`, ver: rel.tag, size: size(bytes), date: day(rel.date), dl: count,
           url: url || `${repoUrl}/releases/download/${rel.tag}/${name}`, old,
-          badge: !old && /\.dmg$/i.test(name) ? '<span class="badge new">最新</span>' : old ? '<span class="badge old">旧版</span>' : '' });
+          badge: (!old && /\.dmg$/i.test(name) ? '<span class="badge new">最新</span>' : old ? '<span class="badge old">旧版</span>' : '')
+            + (rel.pre && /\.dmg$/i.test(name) ? '<span class="badge beta">Beta 测试版</span>' : '') });
       });
     });
     // 源代码：有发布版本就打包最新版本，没有就打包默认分支
@@ -179,7 +188,7 @@ function rowHtml(r){
     const total = d.releases.reduce((s, r) => s + r.assets.reduce((t, a) => t + (a[2] || 0), 0), 0);
     html += `<section class="cat panel" id="p-${p.repo}">
       <div class="cat-hd"><h2>${esc(p.title)} 相关下载<small>${esc(p.note)}${d.live ? '' : ' · 备用列表'}</small></h2>
-        <a href="${repoUrl}" target="_blank" rel="noopener">在 GitHub 查看 ↗</a></div>
+        <span class="cat-links">${p.post ? `<a href="blog.html?tag=${encodeURIComponent(p.title)}">使用教程</a>` : ''}<a href="${repoUrl}" target="_blank" rel="noopener">在 GitHub 查看 ↗</a></span></div>
       <div class="table-wrap"><table>
         <thead><tr><th>文件名称</th><th>版本</th><th>大小</th><th>更新日期</th><th>下载量</th><th>操作</th></tr></thead>
         <tbody>${rows.map(rowHtml).join('')}
@@ -191,8 +200,9 @@ function rowHtml(r){
   document.getElementById('cats').innerHTML = html;
   document.getElementById('stFiles').textContent = files;
   document.getElementById('stDl').textContent = dls;
+  document.getElementById('stProjects').textContent = PROJECTS.length;
   const pr = data[0].releases[0];
-  if (pr) document.getElementById('hotLine').textContent = `纸间 Paperroom ${pr.tag} 已发布！`;
+  if (pr) document.getElementById('hotLine').textContent = `新工具 ${PROJECTS[0].title} ${pr.tag}${pr.pre ? ' 测试版' : ''} 上线啦！`;
 })();
 
 document.addEventListener('click', e => {

@@ -65,7 +65,7 @@
 <script src="js/auth.js"></script>
 <script>
 const list = document.getElementById('list'), q = document.getElementById('q'), chips = document.getElementById('chips'), count = document.getElementById('count');
-let posts = [], tag = '';
+let posts = [], tag = new URLSearchParams(location.search).get('tag') || '';   // 支持 blog.html?tag=xxx 直接筛选
 
 function render(){
   const kw = q.value.trim().toLowerCase();

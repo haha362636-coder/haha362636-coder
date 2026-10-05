@@ -211,6 +211,21 @@ h2,.lead,.eyebrow,.hi,.bio{text-shadow:0 2px 14px #08101c,0 0 4px #08101caa}
 .mini-proj .meta{display:flex;gap:16px;font-family:var(--f-mono);font-size:12px;color:var(--mute);margin-top:auto}
 .mini-proj.dashed{border-style:dashed;background:#0c162680}
 
+.proj+.proj{margin-top:24px}
+.noe-visual{position:relative;min-height:340px;overflow:hidden;display:grid;place-items:center;padding:60px 28px 32px;
+  background:radial-gradient(circle at 30% 20%,#5b6cf233,transparent 55%),radial-gradient(circle at 80% 90%,#14b8d533,transparent 55%),#060b14}
+.noe-visual .badge{position:absolute;left:18px;top:18px;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;padding:6px 12px;border-radius:999px;background:#08101ccc;border:1px solid #4fd8ff66;color:var(--neon)}
+.noe-icon{width:96px;height:96px;filter:drop-shadow(0 18px 30px #1a6fd666);animation:noeFloat 4s ease-in-out infinite}
+@keyframes noeFloat{50%{transform:translateY(-8px) rotate(-3deg)}}
+.noe-chat{width:100%;max-width:340px;display:grid;gap:8px;margin-top:22px}
+.nb{font-size:13px;line-height:1.5;padding:8px 12px;border-radius:14px;max-width:88%}
+.nb b{display:block;font-size:11px;font-family:var(--f-mono);font-weight:500;opacity:.75;margin-bottom:2px}
+.nb.me{justify-self:end;background:var(--neon);color:var(--ink);border-bottom-right-radius:4px;font-weight:500}
+.nb.ai{justify-self:start;background:#ffffff10;border:1px solid var(--line);border-bottom-left-radius:4px}
+.nb.ai.alt b{color:var(--amber);opacity:1}
+.noe:hover .nb{animation:pop .5s var(--spring) both}
+.noe:hover .nb:nth-child(2){animation-delay:.08s}.noe:hover .nb:nth-child(3){animation-delay:.16s}
+@keyframes pop{from{transform:scale(.9);opacity:.4}}
 /* ---------- Timeline ---------- */
 .tl{margin-top:46px;position:relative;display:grid;gap:18px;padding-left:34px}
 .tl::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--neon),var(--amber),transparent)}
@@ -519,8 +534,31 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
       <div class="rv">
         <div class="eyebrow">Open source</div>
         <h2>开源<em>项目</em></h2>
-        <p class="lead">挑一个最得意的放在最前面。纸间用 MIT 协议开源，欢迎来点个 Star，也欢迎提 Issue。</p>
+        <p class="lead">最新的放在最前面。所有项目都用 MIT 协议开源，欢迎来点个 Star，也欢迎提 Issue；安装包都能在 <a href="downloads.html" style="color:var(--neon);text-decoration:underline;text-underline-offset:3px">下载站</a> 找到。</p>
       </div>
+
+      <article class="proj panel rv noe" id="noe-agent">
+        <div class="noe-visual" aria-hidden="true">
+          <span class="badge">NEW · v0.2.0 BETA</span>
+          <img class="noe-icon" src="assets/noe-icon.png" alt="">
+          <div class="noe-chat">
+            <div class="nb me">@Claude 写个登录页，@Codex 写测试</div>
+            <div class="nb ai"><b>Claude Code</b>好的，已创建 login.html ✓</div>
+            <div class="nb ai alt"><b>Codex</b>测试写好了，6 个全部通过 ✓</div>
+          </div>
+        </div>
+        <div class="proj-body">
+          <h3>Noe Agent<small>把 AI 编程助手装进一个聊天软件</small></h3>
+          <p>我的新工具。Claude Code、Codex、Gemini CLI、Qwen Code 等一键安装，DeepSeek、智谱、Kimi 等十几家模型 API 统一管理。可以私聊任意一个 AI，也能把几个 AI 拉进群里，@ 谁就谁来干活。</p>
+          <div class="tags"><span>Electron</span><span>JavaScript</span><span>MCP</span><span>macOS</span><span>MIT</span></div>
+          <div class="star">⚠ Beta 测试版，还会有一些问题，欢迎反馈</div>
+          <div class="links">
+            <a class="btn btn-pri mag" href="downloads.html#p-noe-agent">⬇ 下载 Mac 版</a>
+            <a class="btn btn-ghost mag" href="blog.html?tag=Noe%20Agent">📖 使用教程</a>
+            <a class="btn btn-ghost mag" href="https://github.com/haha362636-coder/noe-agent" target="_blank" rel="noopener">GitHub ↗</a>
+          </div>
+        </div>
+      </article>
 
       <article class="proj panel rv" id="paperroom">
         <div class="shots">
@@ -611,7 +649,8 @@ footer{position:relative;z-index:2;padding-block:100px 50px;padding-inline:16px;
         <div class="tl-item panel rv"><time>2026-08-06</time><b>browserpro</b><p>公开了 JavaScript 项目 browserpro，尝试做一个免费的 AI 浏览器。</p></div>
         <div class="tl-item panel rv"><time>2026-09-28</time><b>纸间 Paperroom 1.0.0</b><p>首个正式版发布：网页版 + Mac 安装包，还剪了一支宣传片。</p></div>
         <div class="tl-item panel rv"><time>2026-09-29</time><b>纸间 1.1.0</b><p>第二天就发了新版，Mac 安装包附带 SHA-256 校验文件。</p></div>
-        <div class="tl-item panel rv"><time>2026-10</time><b>这个博客上线</b><p>把作品和 B站放到一起，顺便请了一只果冻导游。</p></div>
+        <div class="tl-item panel rv"><time>2026-10-03</time><b>这个博客上线</b><p>把作品和 B站放到一起，顺便请了一只果冻导游。</p></div>
+        <div class="tl-item panel rv"><time>2026-10-05</time><b>Noe Agent 0.2.0 Beta</b><p>发布新工具：把各种 AI 编程助手装进一个聊天软件，支持 Apple 芯片和 Intel 的 Mac。</p></div>
       </div>
     </div>
   </section>
@@ -920,6 +959,8 @@ async function tour(first){
     await step(() => say('Bobs 写代码的秘密武器：<br><b>Codex</b> 和 <b>Claude Code</b>！')); await step(() => sleep(2400));
 
     hop(true); await step(() => scrollToY(topOf('#projects'))); hop(false);
+    await step(() => say('最新作品 <b>Noe Agent</b>！<br>把一群 AI 拉进群，@ 谁谁干活～')); await step(() => sleep(2400));
+    hop(true); await step(() => scrollToY(topOf('#paperroom') - 20, 900)); hop(false);
     await step(() => say('这是开源项目 <b>纸间 Paperroom</b>，<br>一块 3D 皮面白板！')); await step(() => sleep(2000));
     hop(true); await step(() => scrollToY(topOf('.feats') - 40, 1000)); hop(false);
     await step(() => say('能录<b>磁带</b>、画贴纸、开多块白板，<br>去 GitHub 点个 Star 吧 ⭐')); await step(() => sleep(2400));
@@ -982,6 +1023,7 @@ const KB = [
   [/再导览|导览|再逛|带我逛|tour/i, () => { setTimeout(() => tour(false), 900); return '好嘞！抓稳了，我们出发～'; }],
   [/博文|博客|文章|日志|写了什么|评论|留言/i, 'Bobs 的博文都在 <a href="blog.html">博文页面</a>：开发日志、AI 编程心得和旺角见闻。每篇文章下面都可以留言评论哦～'],
   [/下载站|下载|安装包|dmg|源码|源代码/i, '所有开源项目都能在 <a href="downloads.html">下载站</a> 免费下载：纸间的 Mac 安装包、历史版本、源代码都在那里，文件直接来自 GitHub Releases。'],
+  [/noe|agent|新工具|聊天软件|群聊|拉群|claude code.*codex/i, `<b>Noe Agent</b> 是 Bobs 的新工具（Beta 测试版）：把 Claude Code、Codex、Gemini CLI 等 AI 编程助手装进一个聊天软件，可以私聊、拉群、@ 谁就谁来干活。<br><a href="downloads.html#p-noe-agent">去下载</a> · <a href="blog.html?tag=Noe%20Agent">使用教程</a>`],
   [/支持|赞助|打赏|请.*喝|充电|爱发电/i, '谢谢你想支持 Bobs！可以去 <a href="support.html">支持页面</a> 看看，那里有赞助入口。不赞助也完全没关系，给纸间点个 Star、去 B站三连，同样是很大的鼓励～'],
   [/codex|claude|ai.*(编程|写代码)|怎么写代码|用什么写/i, 'Bobs 写代码主要靠 <b>Codex</b> 和 <b>Claude Code</b>：先用大白话描述想要的效果，让 AI 搭出第一版，再一边跑一边改，看不懂就追问。纸间就是这样一轮轮做出来的。'],
   [/mac|桌面版|怎么装/i, `Mac 版到 <a href="${GH}/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 <b>Paperroom-1.1.0-mac-arm64.dmg</b>，支持 Apple Silicon、macOS 14 以上。第一次打开被拦的话，去「系统设置 → 隐私与安全性」点「仍要打开」。`],
