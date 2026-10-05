@@ -144,7 +144,7 @@ $('#logoutBtn').onclick = () => Auth.signOut();
 async function loadComments(){
   const { data, error } = await db.from('comments').select('id,author,content,is_admin,status,user_id,created_at')
     .eq('post_id', id).order('created_at', { ascending: true });
-  if (error) { $('#cmList').innerHTML = `<p class="status err">评论加载失败：${Blog.esc(Auth.human(error))}</p>`; return; }
+  if (error) { Blog.showError($('#cmList'), error, '评论', loadComments); return; }
   const me = Auth.me;
   $('#cmCount').textContent = `${data.filter(c => c.status === 'approved').length} 条`;
   $('#cmList').innerHTML = data.length ? data.map(c => {
@@ -179,11 +179,7 @@ $('#cmForm').addEventListener('submit', async e => {
 });
 
 /* ---------- 文章 ---------- */
-(async () => {
-  if (!Blog.ready) { Blog.notConfigured(article); return; }
-  if (!id) { article.innerHTML = '<div class="empty">没有指定文章。<a href="blog.html" style="color:var(--neon)">去看看全部博文 →</a></div>'; return; }
-  const { data: p, error } = await db.from('posts').select('*').eq('id', id).maybeSingle();
-  if (error || !p) { article.innerHTML = `<div class="empty">${error ? '加载失败：' + Blog.esc(error.message) : '这篇文章不存在，或者已经被删除了。'}<br><a href="blog.html" style="color:var(--neon)">回到全部博文 →</a></div>`; return; }
+function renderPost(p){
   document.title = p.title + ' · Bobs';
   article.innerHTML = `
     <div class="tags">${(p.tags || []).map(t => `<span class="tag">#${Blog.esc(t)}</span>`).join('')}</div>
@@ -191,8 +187,24 @@ $('#cmForm').addEventListener('submit', async e => {
     <div class="meta"><span>${Blog.date(p.created_at)}</span>${p.updated_at && Blog.date(p.updated_at) !== Blog.date(p.created_at) ? `<span>更新于 ${Blog.date(p.updated_at)}</span>` : ''}<span>约 ${Blog.readMin(p.content)} 分钟读完</span>${p.published ? '' : '<span style="color:var(--amber)">草稿（只有你能看到）</span>'}</div>
     ${p.cover ? `<img class="cover" src="${Blog.esc(p.cover)}" alt="">` : ''}
     <div class="md">${Blog.md(p.content)}</div>`;
+}
+async function loadPost(){
+  if (!Blog.ready) { Blog.notConfigured(article); return; }
+  if (!id) { article.innerHTML = '<div class="empty">没有指定文章。<a href="blog.html" style="color:var(--neon)">去看看全部博文 →</a></div>'; return; }
+  // 网络不好时先显示上次看过的版本
+  const cached = Blog.cache.get('post:' + id);
+  if (cached) renderPost(cached);
+  const { data: p, error } = await db.from('posts').select('*').eq('id', id).maybeSingle();
+  if (error) {
+    if (!cached) Blog.showError(article, error, '文章', () => { article.innerHTML = '<div class="skeleton"></div>'; loadPost(); });
+    return;
+  }
+  if (!p) { article.innerHTML = '<div class="empty">这篇文章不存在，或者已经被删除了。<br><a href="blog.html" style="color:var(--neon)">回到全部博文 →</a></div>'; return; }
+  if (p.published) Blog.cache.set('post:' + id, p);
+  renderPost(p);
   if (p.published) { $('#cmWrap').hidden = false; loadComments(); }
-})();
+}
+loadPost();
 </script>
 </body>
 </html>

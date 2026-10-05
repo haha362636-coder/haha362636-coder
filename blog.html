@@ -96,14 +96,22 @@ function renderChips(){
 chips.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tag = b.dataset.t; renderChips(); render(); });
 q.addEventListener('input', render);
 
-(async () => {
+async function load(){
   if (!Blog.ready) { Blog.notConfigured(list); return; }
+  // 先显示上次缓存的列表，再去服务器拿最新的
+  const cached = Blog.cache.get('posts');
+  if (cached && !posts.length) { posts = cached; renderChips(); render(); }
   const { data, error } = await Blog.db.from('posts')
     .select('id,title,summary,content,cover,tags,created_at,comments(count)')
     .eq('published', true).order('created_at', { ascending: false });
-  if (error) { list.innerHTML = `<div class="notice"><b>文章加载失败：</b>${Blog.esc(error.message)}<br>刷新页面试试；如果一直这样，检查 Supabase 项目是否处于暂停状态。</div>`; return; }
-  posts = data || []; renderChips(); render();
-})();
+  if (error) {
+    if (posts.length) { count.textContent = `共 ${posts.length} 篇 · 网络不稳定，显示的是上次加载的内容`; return; }
+    Blog.showError(list, error, '文章', () => { list.innerHTML = '<div class="skeleton"></div>'; load(); });
+    return;
+  }
+  posts = data || []; Blog.cache.set('posts', posts); renderChips(); render();
+}
+load();
 </script>
 </body>
 </html>

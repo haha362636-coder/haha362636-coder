@@ -19,6 +19,7 @@
   // 把 Supabase 的英文报错翻成人话
   Auth.human = function (err) {
     const m = err?.message || String(err);
+    if (Blog.isNetErr(err)) return '网络不稳定，连不上服务器，换个网络或者稍后再试。';
     if (/Invalid login credentials/i.test(m)) return '邮箱或密码不对，再检查一下。';
     if (/Email not confirmed/i.test(m)) return '邮箱还没验证。';
     if (/already registered|already been registered/i.test(m)) return '这个邮箱已经注册过了，直接登录就行。';
